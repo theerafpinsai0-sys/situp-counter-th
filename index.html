@@ -72,7 +72,7 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   <div class="pill">จำนวนการลุกนั่ง</div>
   <div class="camw"><div class="cam">
     <video id="v" playsinline muted></video>
-    <canvas class="ov" id="ov" width="120" height="90"></canvas>
+    <canvas class="ov" id="ov" width="160" height="120"></canvas>
     <div class="msg" id="msg">กดเริ่มลุกนั่ง แล้ววางมือถือให้เห็นตัวทั้งตัว</div>
     <div class="state" id="state" hidden></div>
     <div class="big" id="big">0</div>
@@ -150,319 +150,211 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   RN.forEach(r => REG[r].split(' ').forEach(p => PR[p] = r));
 
   const $ = id => document.getElementById(id);
-  let user = null;
-  let profile = null;
+  let user = null, profile = null;
   let data = { total: 0, today: 0 };
-  let rows = [];
-  let rankMode = 'th';
-  let selRegion = '', selProv = '';
+  let rows = [], rankMode = 'th', selRegion = '', selProv = '';
 
-  function dkey() {
-    const d = new Date();
-    return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+  function dkey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+  function loadLocal(){ try{ const s=localStorage.getItem('situp_v2'); if(s) data=JSON.parse(s);}catch(e){} if(!data.days) data.days={}; data.today=data.days[dkey()]||0; }
+  function saveLocal(){ data.days=data.days||{}; data.days[dkey()]=data.today; try{ localStorage.setItem('situp_v2',JSON.stringify(data)); }catch(e){} }
+
+  function go(p){
+    ['Home','Rank','Acc'].forEach(n=>{$('p'+n).hidden=n!==p;$('n'+n).className='tab'+(n===p?' on':'');});
+    if(p==='Acc') renderAcc();
+    if(p==='Rank') loadLeaderboard();
   }
+  ['Home','Rank','Acc'].forEach(n=>$('n'+n).onclick=()=>go(n));
 
-  function loadLocal() {
-    try {
-      const s = localStorage.getItem('situp_v2');
-      if (s) data = JSON.parse(s);
-    } catch(e){}
-    if (!data.days) data.days = {};
-    data.today = data.days[dkey()] || 0;
+  function amsg(t){ $('aMsg').textContent=t||''; }
+  function fillProv(sel){
+    sel.innerHTML=''; const ph=document.createElement('option'); ph.value=''; ph.textContent='เลือกจังหวัดของคุณ'; sel.appendChild(ph);
+    RN.forEach(r=>{ const g=document.createElement('optgroup'); g.label=r; REG[r].split(' ').forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; g.appendChild(o); }); sel.appendChild(g); });
   }
-  function saveLocal() {
-    data.days = data.days || {};
-    data.days[dkey()] = data.today;
-    try { localStorage.setItem('situp_v2', JSON.stringify(data)); } catch(e){}
-  }
+  fillProv($('ac')); fillProv($('pc'));
 
-  function go(p) {
-    ['Home','Rank','Acc'].forEach(n => {
-      $('p'+n).hidden = n !== p;
-      $('n'+n).className = 'tab' + (n === p ? ' on' : '');
-    });
-    if (p === 'Acc') renderAcc();
-    if (p === 'Rank') loadLeaderboard();
-  }
-  ['Home','Rank','Acc'].forEach(n => $('n'+n).onclick = () => go(n));
+  let mode='login';
+  $('tLogin').onclick=()=>{ mode='login'; $('tLogin').className='sm on'; $('tReg').className='sm'; $('ac').hidden=true; $('aGo').textContent='เข้าสู่ระบบ'; amsg(''); };
+  $('tReg').onclick=()=>{ mode='reg'; $('tReg').className='sm on'; $('tLogin').className='sm'; $('ac').hidden=false; $('aGo').textContent='สมัครสมาชิก'; amsg(''); };
 
-  function amsg(t) { $('aMsg').textContent = t || ''; }
+  function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'')+'@situp.app'; }
 
-  function fillProv(sel) {
-    sel.innerHTML = '';
-    const ph = document.createElement('option');
-    ph.value = ''; ph.textContent = 'เลือกจังหวัดของคุณ';
-    sel.appendChild(ph);
-    RN.forEach(r => {
-      const g = document.createElement('optgroup');
-      g.label = r;
-      REG[r].split(' ').forEach(p => {
-        const o = document.createElement('option');
-        o.value = p; o.textContent = p;
-        g.appendChild(o);
-      });
-      sel.appendChild(g);
-    });
-  }
-  fillProv($('ac'));
-  fillProv($('pc'));
-
-  let mode = 'login';
-  $('tLogin').onclick = () => {
-    mode = 'login';
-    $('tLogin').className = 'sm on'; $('tReg').className = 'sm';
-    $('ac').hidden = true;
-    $('aGo').textContent = 'เข้าสู่ระบบ';
+  $('aGo').onclick=async()=>{
+    const uname=$('au').value.trim(), pass=$('ap').value;
     amsg('');
-  };
-  $('tReg').onclick = () => {
-    mode = 'reg';
-    $('tReg').className = 'sm on'; $('tLogin').className = 'sm';
-    $('ac').hidden = false;
-    $('aGo').textContent = 'สมัครสมาชิก';
-    amsg('');
-  };
-
-  function toEmail(username) {
-    return username.toLowerCase().replace(/[^a-z0-9]/g,'') + '@situp.app';
-  }
-
-  $('aGo').onclick = async () => {
-    const uname = $('au').value.trim();
-    const pass = $('ap').value;
-    amsg('');
-    if (!uname || uname.length < 3) { amsg('ชื่อผู้ใช้ต้องมี 3-16 ตัวอักษร'); return; }
-    if (!pass || pass.length < 6) { amsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
-    $('aGo').disabled = true;
-    const email = toEmail(uname);
-    try {
-      if (mode === 'reg') {
-        const prov = $('ac').value;
-        if (!prov) { amsg('เลือกจังหวัดของคุณก่อน'); return; }
-        const { data: exist } = await sb.from('profiles').select('id').ilike('username', uname).maybeSingle();
-        if (exist) { amsg('ชื่อผู้ใช้นี้มีคนใช้แล้ว'); return; }
-        const { data: authData, error } = await sb.auth.signUp({ email, password: pass });
-        if (error) throw error;
-        const uid = authData.user.id;
-        const region = PR[prov] || '';
-        await sb.from('profiles').upsert({
-          id: uid, email, username: uname, province: prov, region,
-          total_situps: data.total || 0, updated_at: new Date().toISOString()
-        });
+    if(!uname||uname.length<3){ amsg('ชื่อผู้ใช้ต้องมี 3-16 ตัวอักษร'); return; }
+    if(!pass||pass.length<6){ amsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
+    $('aGo').disabled=true;
+    const email=toEmail(uname);
+    try{
+      if(mode==='reg'){
+        const prov=$('ac').value;
+        if(!prov){ amsg('เลือกจังหวัดของคุณก่อน'); return; }
+        const {data:exist}=await sb.from('profiles').select('id').ilike('username',uname).maybeSingle();
+        if(exist){ amsg('ชื่อผู้ใช้นี้มีคนใช้แล้ว'); return; }
+        const {data:authData,error}=await sb.auth.signUp({email,password:pass});
+        if(error) throw error;
+        await sb.from('profiles').upsert({id:authData.user.id,email,username:uname,province:prov,region:PR[prov]||'',total_situps:data.total||0,updated_at:new Date().toISOString()});
         amsg('สมัครสำเร็จ!');
       } else {
-        const { error } = await sb.auth.signInWithPassword({ email, password: pass });
-        if (error) throw error;
+        const {error}=await sb.auth.signInWithPassword({email,password:pass});
+        if(error) throw error;
       }
-      await refreshUser();
-      $('ap').value = '';
-    } catch (e) {
-      let msg = e.message || 'เกิดข้อผิดพลาด';
-      if (msg.includes('Invalid login')) msg = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
-      if (msg.includes('already registered')) msg = 'ชื่อผู้ใช้นี้มีคนใช้แล้ว';
+      await refreshUser(); $('ap').value='';
+    }catch(e){
+      let msg=e.message||'เกิดข้อผิดพลาด';
+      if(msg.includes('Invalid login')) msg='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+      if(msg.includes('already registered')) msg='ชื่อผู้ใช้นี้มีคนใช้แล้ว';
       amsg(msg);
-    } finally {
-      $('aGo').disabled = false;
-    }
+    }finally{ $('aGo').disabled=false; }
   };
 
-  $('outBtn').onclick = async () => {
-    await sb.auth.signOut();
-    user = null; profile = null;
-    renderAcc();
-  };
+  $('outBtn').onclick=async()=>{ await sb.auth.signOut(); user=null; profile=null; renderAcc(); };
+  $('pc').onchange=async()=>{ if(!user||!profile) return; const prov=$('pc').value; await sb.from('profiles').update({province:prov,region:PR[prov]||'',updated_at:new Date().toISOString()}).eq('id',user.id); profile.province=prov; profile.region=PR[prov]||''; };
 
-  $('pc').onchange = async () => {
-    if (!user || !profile) return;
-    const prov = $('pc').value;
-    const region = PR[prov] || '';
-    await sb.from('profiles').update({ province: prov, region, updated_at: new Date().toISOString() }).eq('id', user.id);
-    profile.province = prov;
-    profile.region = region;
-  };
-
-  async function refreshUser() {
-    const { data: { user: u } } = await sb.auth.getUser();
-    user = u;
-    if (user) {
-      const { data: p } = await sb.from('profiles').select('*').eq('id', user.id).single();
-      profile = p;
-      if (profile && profile.total_situps > data.total) {
-        data.total = profile.total_situps;
-        saveLocal();
-        renderHome();
-      }
-    } else profile = null;
+  async function refreshUser(){
+    const {data:{user:u}}=await sb.auth.getUser();
+    user=u;
+    if(user){
+      const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
+      profile=p;
+      if(profile&&profile.total_situps>data.total){ data.total=profile.total_situps; saveLocal(); renderHome(); }
+    } else profile=null;
     renderAcc();
   }
 
-  function renderAcc() {
-    if (user && profile) {
-      $('authBox').hidden = true;
-      $('profBox').hidden = false;
-      $('pfName').textContent = profile.username || 'ผู้ใช้';
-      $('pfEmail').textContent = profile.province || '';
-      $('pfAv').textContent = (profile.username || '?')[0].toUpperCase();
-      $('pc').value = profile.province || '';
-    } else {
-      $('authBox').hidden = false;
-      $('profBox').hidden = true;
-    }
+  function renderAcc(){
+    if(user&&profile){
+      $('authBox').hidden=true; $('profBox').hidden=false;
+      $('pfName').textContent=profile.username||'ผู้ใช้';
+      $('pfEmail').textContent=profile.province||'';
+      $('pfAv').textContent=(profile.username||'?')[0].toUpperCase();
+      $('pc').value=profile.province||'';
+    } else { $('authBox').hidden=false; $('profBox').hidden=true; }
   }
 
-  async function loadLeaderboard() {
-    $('rsum').textContent = 'กำลังโหลด...';
-    $('list').innerHTML = '';
-    let q = sb.from('profiles').select('id, username, province, region, total_situps, avatar_url').order('total_situps', { ascending: false }).limit(100);
-    if (rankMode === 'region' && selRegion) q = q.eq('region', selRegion);
-    if (rankMode === 'prov' && selProv) q = q.eq('province', selProv);
-    const { data: list, error } = await q;
-    if (error) { $('rnote').textContent = 'โหลดอันดับไม่ได้: ' + error.message; return; }
-    rows = list || [];
-    renderRank();
+  async function loadLeaderboard(){
+    $('rsum').textContent='กำลังโหลด...'; $('list').innerHTML='';
+    let q=sb.from('profiles').select('id,username,province,region,total_situps,avatar_url').order('total_situps',{ascending:false}).limit(100);
+    if(rankMode==='region'&&selRegion) q=q.eq('region',selRegion);
+    if(rankMode==='prov'&&selProv) q=q.eq('province',selProv);
+    const {data:list,error}=await q;
+    if(error){ $('rnote').textContent='โหลดอันดับไม่ได้: '+error.message; return; }
+    rows=list||[]; renderRank();
   }
 
-  function renderRank() {
-    const filtered = rows.filter(r => (r.total_situps || 0) > 0);
-    const totalShow = Math.max(10, filtered.length);
-    $('rsum').textContent = filtered.length ? `มีผู้เล่น ${filtered.length} คน` : 'ยังไม่มีผู้เล่นในอันดับนี้';
-    $('list').innerHTML = '';
-    for (let i = 0; i < totalShow; i++) {
-      const r = filtered[i];
-      const li = document.createElement('li');
-      if (r && user && r.id === user.id) li.classList.add('me');
-      if (!r) li.classList.add('empty');
-      const rkClass = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
-      if (r) {
-        li.innerHTML = `<div class="rk ${rkClass}">${i+1}</div><div class="who"><div class="av">${(r.username||'?')[0].toUpperCase()}</div><span>${r.username || 'ไม่ระบุ'}<br><small style="font-weight:400;opacity:.7">${r.province||''}</small></span></div><div class="cnt">${r.total_situps||0}</div>`;
+  function renderRank(){
+    const filtered=rows.filter(r=>(r.total_situps||0)>0);
+    const totalShow=Math.max(10,filtered.length);
+    $('rsum').textContent=filtered.length?`มีผู้เล่น ${filtered.length} คน`:'ยังไม่มีผู้เล่นในอันดับนี้';
+    $('list').innerHTML='';
+    for(let i=0;i<totalShow;i++){
+      const r=filtered[i];
+      const li=document.createElement('li');
+      if(r&&user&&r.id===user.id) li.classList.add('me');
+      if(!r) li.classList.add('empty');
+      const rk=i===0?'r1':i===1?'r2':i===2?'r3':'';
+      if(r){
+        li.innerHTML=`<div class="rk ${rk}">${i+1}</div><div class="who"><div class="av">${(r.username||'?')[0].toUpperCase()}</div><span>${r.username||'ไม่ระบุ'}<br><small style="font-weight:400;opacity:.7">${r.province||''}</small></span></div><div class="cnt">${r.total_situps||0}</div>`;
       } else {
-        li.innerHTML = `<div class="rk">${i+1}</div><div class="who"><div class="av" style="opacity:.3">?</div><span style="opacity:.4">ว่าง</span></div><div class="cnt" style="opacity:.3">-</div>`;
+        li.innerHTML=`<div class="rk">${i+1}</div><div class="who"><div class="av" style="opacity:.3">?</div><span style="opacity:.4">ว่าง</span></div><div class="cnt" style="opacity:.3">-</div>`;
       }
       $('list').appendChild(li);
     }
-    $('rt').textContent = rankMode === 'th' ? 'อันดับประเทศไทย' : rankMode === 'region' ? 'อันดับภาค' : 'อันดับจังหวัด';
+    $('rt').textContent=rankMode==='th'?'อันดับประเทศไทย':rankMode==='region'?'อันดับภาค':'อันดับจังหวัด';
   }
 
-  $('rkt').onclick = () => { rankMode = 'th'; selRegion=''; selProv=''; $('rkt').className='on'; $('rkr').className=''; $('rkj').className=''; loadLeaderboard(); };
-  $('rkr').onclick = () => { rankMode = 'region'; selRegion = profile?.region || 'ภาคตะวันออกเฉียงเหนือ'; $('rkr').className='on'; $('rkt').className=''; $('rkj').className=''; loadLeaderboard(); };
-  $('rkj').onclick = () => { rankMode = 'prov'; selProv = profile?.province || 'อุบลราชธานี'; $('rkj').className='on'; $('rkt').className=''; $('rkr').className=''; loadLeaderboard(); };
+  $('rkt').onclick=()=>{ rankMode='th'; selRegion=''; selProv=''; $('rkt').className='on'; $('rkr').className=''; $('rkj').className=''; loadLeaderboard(); };
+  $('rkr').onclick=()=>{ rankMode='region'; selRegion=profile?.region||'ภาคตะวันออกเฉียงเหนือ'; $('rkr').className='on'; $('rkt').className=''; $('rkj').className=''; loadLeaderboard(); };
+  $('rkj').onclick=()=>{ rankMode='prov'; selProv=profile?.province||'อุบลราชธานี'; $('rkj').className='on'; $('rkt').className=''; $('rkr').className=''; loadLeaderboard(); };
 
-  let stream = null, counting = false, count = 0;
-  const video = $('v'), canvas = $('ov'), ctx = canvas.getContext('2d');
-  let hist = [], phase = 0, cooldown = 0;
-  const HIST_LEN = 12;
+  let stream=null, counting=false, count=0;
+  const video=$('v'), canvas=$('ov'), ctx=canvas.getContext('2d');
+  let hist=[], phase=0, downHold=0, upHold=0, cooldown=0;
+  const HIST_LEN=18;
 
-  async function startCamera() {
-    if (!user || !profile) {
-      $('msg').textContent = 'กรุณาเข้าสู่ระบบก่อนใช้งานกล้อง';
-      $('msg').hidden = false;
-      go('Acc');
-      return;
+  async function startCamera(){
+    if(!user||!profile){
+      $('msg').textContent='กรุณาเข้าสู่ระบบก่อนใช้งานกล้อง';
+      $('msg').hidden=false; $('msg').style.display='';
+      go('Acc'); return;
     }
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      });
-      video.srcObject = stream;
-      await video.play();
-      $('msg').hidden = true;
-      $('state').hidden = false;
-      $('state').textContent = 'พร้อมนับ - ลุกนั่งให้ชัด';
-      counting = true;
-      count = 0;
-      $('big').textContent = '0';
-      $('startBtn').textContent = 'หยุดนับ';
-      hist = []; phase = 0; cooldown = 0;
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});
+      video.srcObject=stream; await video.play();
+      $('msg').hidden=true; $('msg').style.display='none';
+      $('state').hidden=false; $('state').textContent='วางตัวให้เห็นทั้งตัว แล้วลุกนั่ง';
+      counting=true; count=0; $('big').textContent='0'; $('startBtn').textContent='หยุดนับ';
+      hist=[]; phase=0; downHold=0; upHold=0; cooldown=0;
       loop();
-    } catch (e) {
-      $('msg').textContent = 'ไม่สามารถเปิดกล้องได้: ' + (e.message || e);
-      $('msg').hidden = false;
+    }catch(e){
+      $('msg').textContent='ไม่สามารถเปิดกล้องได้: '+(e.message||e);
+      $('msg').hidden=false; $('msg').style.display='';
     }
   }
 
-  function stopCamera() {
-    counting = false;
-    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-    video.srcObject = null;
-    $('msg').hidden = false;
-    $('msg').textContent = 'กดเริ่มลุกนั่ง แล้ววางมือถือให้เห็นตัวทั้งตัว';
-    $('state').hidden = true;
-    $('startBtn').textContent = 'เริ่มลุกนั่ง';
+  function stopCamera(){
+    counting=false;
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+    video.srcObject=null;
+    $('msg').hidden=false; $('msg').style.display='';
+    $('msg').textContent='กดเริ่มลุกนั่ง แล้ววางมือถือให้เห็นตัวทั้งตัว';
+    $('state').hidden=true; $('startBtn').textContent='เริ่มลุกนั่ง';
   }
 
-  function loop() {
-    if (!counting) return;
-    if (video.readyState >= 2) {
-      canvas.width = 120; canvas.height = 90;
-      ctx.drawImage(video, 0, 0, 120, 90);
-      const frame = ctx.getImageData(0, 0, 120, 90);
-      let sum = 0, n = 0;
-      for (let y = 25; y < 70; y++) {
-        for (let x = 35; x < 85; x++) {
-          const i = (y * 120 + x) * 4;
-          sum += (frame.data[i] + frame.data[i+1] + frame.data[i+2]) / 3;
-          n++;
+  function loop(){
+    if(!counting) return;
+    if(video.readyState>=2){
+      canvas.width=160; canvas.height=120;
+      ctx.drawImage(video,0,0,160,120);
+      const frame=ctx.getImageData(0,0,160,120);
+      let sumH=0,nH=0,sumB=0,nB=0,sumL=0,nL=0;
+      for(let y=5;y<35;y++) for(let x=40;x<120;x++){ const i=(y*160+x)*4; sumH+=(frame.data[i]+frame.data[i+1]+frame.data[i+2])/3; nH++; }
+      for(let y=35;y<80;y++) for(let x=30;x<130;x++){ const i=(y*160+x)*4; sumB+=(frame.data[i]+frame.data[i+1]+frame.data[i+2])/3; nB++; }
+      for(let y=80;y<115;y++) for(let x=40;x<120;x++){ const i=(y*160+x)*4; sumL+=(frame.data[i]+frame.data[i+1]+frame.data[i+2])/3; nL++; }
+      const brightness=(sumH/nH)*0.25+(sumB/nB)*0.5+(sumL/nL)*0.25;
+      hist.push(brightness); if(hist.length>HIST_LEN) hist.shift();
+
+      if(hist.length>=HIST_LEN && cooldown===0){
+        const recent=hist.slice(-5), older=hist.slice(0,5);
+        const avgR=recent.reduce((a,b)=>a+b,0)/recent.length;
+        const avgO=older.reduce((a,b)=>a+b,0)/older.length;
+        const delta=avgR-avgO;
+
+        if(phase===0){
+          if(delta<-18){ downHold++; if(downHold>=5){ phase=1; downHold=0; $('state').textContent='ลงแล้ว... ลุกขึ้น'; } }
+          else downHold=0;
+        } else if(phase===1){
+          if(delta>18){ upHold++; if(upHold>=5){
+            phase=0; upHold=0;
+            count++; data.today++; data.total++;
+            saveLocal(); renderHome();
+            $('big').textContent=count;
+            $('big').classList.remove('pop'); void $('big').offsetWidth; $('big').classList.add('pop');
+            $('state').textContent='นับแล้ว!';
+            cooldown=40; pushScore();
+          }}
+          else upHold=0;
         }
       }
-      const brightness = sum / n;
-      hist.push(brightness);
-      if (hist.length > HIST_LEN) hist.shift();
-
-      if (hist.length >= HIST_LEN && cooldown === 0) {
-        const recent = hist.slice(-4);
-        const older = hist.slice(0, 4);
-        const avgRecent = recent.reduce((a,b)=>a+b,0) / recent.length;
-        const avgOlder = older.reduce((a,b)=>a+b,0) / older.length;
-        const delta = avgRecent - avgOlder;
-
-        if (phase === 0 && delta < -12) {
-          phase = 1;
-          $('state').textContent = 'ลง...';
-        } else if (phase === 1 && delta > 12) {
-          phase = 0;
-          count++;
-          data.today++;
-          data.total++;
-          saveLocal();
-          renderHome();
-          $('big').textContent = count;
-          $('big').classList.remove('pop');
-          void $('big').offsetWidth;
-          $('big').classList.add('pop');
-          $('state').textContent = 'นับแล้ว!';
-          cooldown = 25;
-          pushScore();
-        }
-      }
-      if (cooldown > 0) cooldown--;
+      if(cooldown>0) cooldown--;
     }
     requestAnimationFrame(loop);
   }
 
-  $('startBtn').onclick = () => {
-    if (counting) stopCamera();
-    else startCamera();
-  };
+  $('startBtn').onclick=()=>{ if(counting) stopCamera(); else startCamera(); };
 
-  async function pushScore() {
-    if (!user || !profile) return;
-    try {
-      await sb.from('profiles').update({ total_situps: data.total, updated_at: new Date().toISOString() }).eq('id', user.id);
-      await sb.from('situp_records').insert({ user_id: user.id, count: 1 });
-    } catch(e) { console.warn(e); }
+  async function pushScore(){
+    if(!user||!profile) return;
+    try{
+      await sb.from('profiles').update({total_situps:data.total,updated_at:new Date().toISOString()}).eq('id',user.id);
+      await sb.from('situp_records').insert({user_id:user.id,count:1});
+    }catch(e){ console.warn(e); }
   }
 
-  function renderHome() {
-    $('today').textContent = data.today || 0;
-    $('total').textContent = data.total || 0;
-  }
+  function renderHome(){ $('today').textContent=data.today||0; $('total').textContent=data.total||0; }
 
-  loadLocal();
-  renderHome();
-  refreshUser().then(() => {
-    sb.auth.onAuthStateChange(() => refreshUser());
-  });
+  loadLocal(); renderHome();
+  refreshUser().then(()=>{ sb.auth.onAuthStateChange(()=>refreshUser()); });
   go('Home');
 })();
 </script>
