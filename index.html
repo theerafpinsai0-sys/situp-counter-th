@@ -21,7 +21,6 @@ button.pill:active{transform:scale(.96)}
 video,canvas.ov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 .msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:16px;line-height:1.5;opacity:.8;padding:20px;gap:10px}
 .msg::before{content:'📷';font-size:56px}
-.msg.sm{font-size:15px}
 .big{position:absolute;right:12px;bottom:12px;font-weight:800;font-size:76px;line-height:1;color:#fff;background:rgba(0,0,0,.34);backdrop-filter:blur(8px);border-radius:26px;padding:4px 20px 10px;text-shadow:0 2px 14px rgba(0,0,0,.65)}
 .state{position:absolute;left:12px;top:12px;background:rgba(0,0,0,.6);color:#fff;border-radius:99px;padding:5px 14px;font-size:13px;backdrop-filter:blur(8px)}
 .sub{display:grid;grid-template-columns:1fr 1fr;background:var(--panel);border-radius:22px;padding:12px 0;margin:16px 0 4px;text-align:center}
@@ -32,6 +31,7 @@ video,canvas.ov{position:absolute;inset:0;width:100%;height:100%;object-fit:cove
 .list{list-style:none;margin:0;padding:0;max-height:62vh;overflow-y:auto}
 .list li{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;min-height:64px;border-bottom:1px solid var(--line);padding:4px 10px 4px 14px}
 .list li.me{background:rgba(255,95,192,.25);border-radius:12px}
+.list li.empty{opacity:.5}
 .rk{font-size:30px;text-align:center;font-weight:800}
 .rk.r1{background:linear-gradient(135deg,#FFE27A,#F5A100);color:#4a3000;width:40px;height:40px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:22px}
 .rk.r2{background:linear-gradient(135deg,#EEF2F7,#98A4B5);color:#2b3340;width:40px;height:40px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:22px}
@@ -42,7 +42,7 @@ video,canvas.ov{position:absolute;inset:0;width:100%;height:100%;object-fit:cove
 .cnt::after{content:' ครั้ง';font-size:12px;font-weight:400;opacity:.65}
 .av{width:40px;height:40px;border-radius:50%;flex:none;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .av.lg{width:92px;height:92px;font-size:38px}
-select,input[type=text],input[type=password],input[type=email]{font:inherit;width:100%;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:46px;margin-top:8px}
+select,input[type=text],input[type=password]{font:inherit;width:100%;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:46px;margin-top:8px}
 .seg{display:flex;gap:8px;margin-bottom:12px;background:var(--bg);padding:5px;border-radius:99px}
 .seg button{flex:1;border:0;background:none;color:var(--ink);font:800 14px 'Prompt',sans-serif;min-height:42px;border-radius:99px;cursor:pointer}
 .seg .on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(255,95,192,.4)}
@@ -72,7 +72,7 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   <div class="pill">จำนวนการลุกนั่ง</div>
   <div class="camw"><div class="cam">
     <video id="v" playsinline muted></video>
-    <canvas class="ov" id="ov" width="80" height="60"></canvas>
+    <canvas class="ov" id="ov" width="120" height="90"></canvas>
     <div class="msg" id="msg">กดเริ่มลุกนั่ง แล้ววางมือถือให้เห็นตัวทั้งตัว</div>
     <div class="state" id="state" hidden></div>
     <div class="big" id="big">0</div>
@@ -234,30 +234,20 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
     if (!uname || uname.length < 3) { amsg('ชื่อผู้ใช้ต้องมี 3-16 ตัวอักษร'); return; }
     if (!pass || pass.length < 6) { amsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
     $('aGo').disabled = true;
-
     const email = toEmail(uname);
-
     try {
       if (mode === 'reg') {
         const prov = $('ac').value;
         if (!prov) { amsg('เลือกจังหวัดของคุณก่อน'); return; }
-
         const { data: exist } = await sb.from('profiles').select('id').ilike('username', uname).maybeSingle();
         if (exist) { amsg('ชื่อผู้ใช้นี้มีคนใช้แล้ว'); return; }
-
         const { data: authData, error } = await sb.auth.signUp({ email, password: pass });
         if (error) throw error;
-
         const uid = authData.user.id;
         const region = PR[prov] || '';
         await sb.from('profiles').upsert({
-          id: uid,
-          email,
-          username: uname,
-          province: prov,
-          region,
-          total_situps: data.total || 0,
-          updated_at: new Date().toISOString()
+          id: uid, email, username: uname, province: prov, region,
+          total_situps: data.total || 0, updated_at: new Date().toISOString()
         });
         amsg('สมัครสำเร็จ!');
       } else {
@@ -302,9 +292,7 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
         saveLocal();
         renderHome();
       }
-    } else {
-      profile = null;
-    }
+    } else profile = null;
     renderAcc();
   }
 
@@ -328,33 +316,30 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
     let q = sb.from('profiles').select('id, username, province, region, total_situps, avatar_url').order('total_situps', { ascending: false }).limit(100);
     if (rankMode === 'region' && selRegion) q = q.eq('region', selRegion);
     if (rankMode === 'prov' && selProv) q = q.eq('province', selProv);
-
     const { data: list, error } = await q;
-    if (error) {
-      $('rnote').textContent = 'โหลดอันดับไม่ได้: ' + error.message;
-      return;
-    }
+    if (error) { $('rnote').textContent = 'โหลดอันดับไม่ได้: ' + error.message; return; }
     rows = list || [];
     renderRank();
   }
 
   function renderRank() {
     const filtered = rows.filter(r => (r.total_situps || 0) > 0);
-    $('rsum').textContent = filtered.length ? `มีผู้เล่น ${filtered.length} คน` : 'ยังไม่มีข้อมูล';
+    const totalShow = Math.max(10, filtered.length);
+    $('rsum').textContent = filtered.length ? `มีผู้เล่น ${filtered.length} คน` : 'ยังไม่มีผู้เล่นในอันดับนี้';
     $('list').innerHTML = '';
-    filtered.forEach((r, i) => {
+    for (let i = 0; i < totalShow; i++) {
+      const r = filtered[i];
       const li = document.createElement('li');
-      if (user && r.id === user.id) li.classList.add('me');
+      if (r && user && r.id === user.id) li.classList.add('me');
+      if (!r) li.classList.add('empty');
       const rkClass = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
-      li.innerHTML = `
-        <div class="rk ${rkClass}">${i+1}</div>
-        <div class="who">
-          <div class="av">${(r.username||'?')[0].toUpperCase()}</div>
-          <span>${r.username || 'ไม่ระบุ'}<br><small style="font-weight:400;opacity:.7">${r.province||''}</small></span>
-        </div>
-        <div class="cnt">${r.total_situps||0}</div>`;
+      if (r) {
+        li.innerHTML = `<div class="rk ${rkClass}">${i+1}</div><div class="who"><div class="av">${(r.username||'?')[0].toUpperCase()}</div><span>${r.username || 'ไม่ระบุ'}<br><small style="font-weight:400;opacity:.7">${r.province||''}</small></span></div><div class="cnt">${r.total_situps||0}</div>`;
+      } else {
+        li.innerHTML = `<div class="rk">${i+1}</div><div class="who"><div class="av" style="opacity:.3">?</div><span style="opacity:.4">ว่าง</span></div><div class="cnt" style="opacity:.3">-</div>`;
+      }
       $('list').appendChild(li);
-    });
+    }
     $('rt').textContent = rankMode === 'th' ? 'อันดับประเทศไทย' : rankMode === 'region' ? 'อันดับภาค' : 'อันดับจังหวัด';
   }
 
@@ -364,63 +349,77 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
 
   let stream = null, counting = false, count = 0;
   const video = $('v'), canvas = $('ov'), ctx = canvas.getContext('2d');
+  let hist = [], phase = 0, cooldown = 0;
+  const HIST_LEN = 12;
 
   async function startCamera() {
+    if (!user || !profile) {
+      $('msg').textContent = 'กรุณาเข้าสู่ระบบก่อนใช้งานกล้อง';
+      $('msg').hidden = false;
+      go('Acc');
+      return;
+    }
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false });
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
       video.srcObject = stream;
       await video.play();
       $('msg').hidden = true;
       $('state').hidden = false;
-      $('state').textContent = 'พร้อมนับ';
+      $('state').textContent = 'พร้อมนับ - ลุกนั่งให้ชัด';
       counting = true;
+      count = 0;
+      $('big').textContent = '0';
       $('startBtn').textContent = 'หยุดนับ';
+      hist = []; phase = 0; cooldown = 0;
       loop();
     } catch (e) {
       $('msg').textContent = 'ไม่สามารถเปิดกล้องได้: ' + (e.message || e);
+      $('msg').hidden = false;
     }
   }
 
   function stopCamera() {
     counting = false;
-    if (stream) {
-      stream.getTracks().forEach(t => t.stop());
-      stream = null;
-    }
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     video.srcObject = null;
     $('msg').hidden = false;
+    $('msg').textContent = 'กดเริ่มลุกนั่ง แล้ววางมือถือให้เห็นตัวทั้งตัว';
     $('state').hidden = true;
     $('startBtn').textContent = 'เริ่มลุกนั่ง';
   }
 
-  let prevBrightness = 0;
-  let phase = 0;
-  let cooldown = 0;
-
   function loop() {
     if (!counting) return;
     if (video.readyState >= 2) {
-      canvas.width = 80; canvas.height = 60;
-      ctx.drawImage(video, 0, 0, 80, 60);
-      const frame = ctx.getImageData(0, 0, 80, 60);
-      let sum = 0;
-      for (let y = 20; y < 50; y++) {
-        for (let x = 25; x < 55; x++) {
-          const i = (y * 80 + x) * 4;
+      canvas.width = 120; canvas.height = 90;
+      ctx.drawImage(video, 0, 0, 120, 90);
+      const frame = ctx.getImageData(0, 0, 120, 90);
+      let sum = 0, n = 0;
+      for (let y = 25; y < 70; y++) {
+        for (let x = 35; x < 85; x++) {
+          const i = (y * 120 + x) * 4;
           sum += (frame.data[i] + frame.data[i+1] + frame.data[i+2]) / 3;
+          n++;
         }
       }
-      const brightness = sum / (30 * 30);
-      const delta = brightness - prevBrightness;
-      prevBrightness = brightness;
+      const brightness = sum / n;
+      hist.push(brightness);
+      if (hist.length > HIST_LEN) hist.shift();
 
-      if (cooldown > 0) cooldown--;
+      if (hist.length >= HIST_LEN && cooldown === 0) {
+        const recent = hist.slice(-4);
+        const older = hist.slice(0, 4);
+        const avgRecent = recent.reduce((a,b)=>a+b,0) / recent.length;
+        const avgOlder = older.reduce((a,b)=>a+b,0) / older.length;
+        const delta = avgRecent - avgOlder;
 
-      if (cooldown === 0 && Math.abs(delta) > 8) {
-        if (phase === 0 && delta < -5) {
+        if (phase === 0 && delta < -12) {
           phase = 1;
           $('state').textContent = 'ลง...';
-        } else if (phase === 1 && delta > 5) {
+        } else if (phase === 1 && delta > 12) {
           phase = 0;
           count++;
           data.today++;
@@ -432,38 +431,25 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
           void $('big').offsetWidth;
           $('big').classList.add('pop');
           $('state').textContent = 'นับแล้ว!';
-          cooldown = 15;
+          cooldown = 25;
           pushScore();
         }
       }
+      if (cooldown > 0) cooldown--;
     }
     requestAnimationFrame(loop);
   }
 
   $('startBtn').onclick = () => {
-    if (counting) {
-      stopCamera();
-      count = 0;
-      $('big').textContent = '0';
-    } else {
-      count = 0;
-      $('big').textContent = '0';
-      startCamera();
-    }
+    if (counting) stopCamera();
+    else startCamera();
   };
 
   async function pushScore() {
     if (!user || !profile) return;
     try {
-      await sb.from('profiles').update({
-        total_situps: data.total,
-        updated_at: new Date().toISOString()
-      }).eq('id', user.id);
-
-      await sb.from('situp_records').insert({
-        user_id: user.id,
-        count: 1
-      });
+      await sb.from('profiles').update({ total_situps: data.total, updated_at: new Date().toISOString() }).eq('id', user.id);
+      await sb.from('situp_records').insert({ user_id: user.id, count: 1 });
     } catch(e) { console.warn(e); }
   }
 
