@@ -5,14 +5,479 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>นับลุกนั่ง</title>
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* Full CSS from original cleaned file is included here - abbreviated in this call for length, but the actual upload uses the complete 40KB file content from artifacts. */
+:root{--bg:#fff;--panel:#EFE9FA;--ink:#0A0A0A;--pink:#FF5FC0;--lilac:#E0A9EF;--purple:#8B4FFF;--ok:#0b7a5a;--grad:linear-gradient(135deg,#FF5FC0,#8B4FFF);--shadow:0 10px 30px rgba(139,79,255,.2);--line:rgba(139,79,255,.2)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15121C;--panel:#2A2440;--ink:#F5F2FB;--ok:#4FD1A5;--line:rgba(224,169,239,.18)}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:radial-gradient(700px 420px at 100% -8%,rgba(255,95,192,.25),transparent 60%),radial-gradient(700px 480px at -10% 40%,rgba(139,79,255,.2),transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font-family:'Prompt',system-ui,sans-serif;padding-bottom:calc(108px + env(safe-area-inset-bottom,0px))}
+main{max-width:520px;margin:0 auto;padding:14px 18px}
+h2{font-weight:800;font-size:22px;text-align:center;margin:6px 0 12px}
+.pill{display:block;margin:0 auto;background:var(--grad);color:#fff;border:0;border-radius:99px;font:800 20px/1.2 'Prompt',sans-serif;padding:14px 28px;text-align:center;width:max-content;max-width:100%;box-shadow:var(--shadow)}
+button.pill{cursor:pointer;min-height:48px;transition:transform .12s}
+button.pill:active{transform:scale(.96)}
+.camw{position:relative;margin:16px 0;border-radius:32px}
+.cam{position:relative;background:var(--panel);border-radius:32px;overflow:hidden;aspect-ratio:3/4;max-height:62vh;width:100%;z-index:1}
+video,canvas.ov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:16px;line-height:1.5;opacity:.8;padding:20px;gap:10px}
+.msg::before{content:'📷';font-size:56px}
+.msg.sm{font-size:15px}
+.big{position:absolute;right:12px;bottom:12px;font-weight:800;font-size:76px;line-height:1;color:#fff;background:rgba(0,0,0,.34);backdrop-filter:blur(8px);border-radius:26px;padding:4px 20px 10px;text-shadow:0 2px 14px rgba(0,0,0,.65)}
+.state{position:absolute;left:12px;top:12px;background:rgba(0,0,0,.6);color:#fff;border-radius:99px;padding:5px 14px;font-size:13px;backdrop-filter:blur(8px)}
+.sub{display:grid;grid-template-columns:1fr 1fr;background:var(--panel);border-radius:22px;padding:12px 0;margin:16px 0 4px;text-align:center}
+.st b{display:block;font-size:30px;line-height:1.15;font-weight:800}
+.st span{font-size:13px;font-weight:400;opacity:.7}
+.st+.st{border-left:1px solid var(--line)}
+.panel{background:var(--panel);border-radius:28px;padding:16px 8px 8px;box-shadow:var(--shadow)}
+.list{list-style:none;margin:0;padding:0;max-height:62vh;overflow-y:auto}
+.list li{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;min-height:64px;border-bottom:1px solid var(--line);padding:4px 10px 4px 14px}
+.list li.me{background:rgba(255,95,192,.25);border-radius:12px}
+.rk{font-size:30px;text-align:center;font-weight:800}
+.rk.r1{background:linear-gradient(135deg,#FFE27A,#F5A100);color:#4a3000;width:40px;height:40px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:22px}
+.rk.r2{background:linear-gradient(135deg,#EEF2F7,#98A4B5);color:#2b3340;width:40px;height:40px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:22px}
+.rk.r3{background:linear-gradient(135deg,#F2B07A,#B5651D);color:#3b1d05;width:40px;height:40px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:22px}
+.who{display:flex;align-items:center;gap:10px;min-width:0;font-weight:800}
+.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cnt{font-weight:800;font-size:22px}
+.cnt::after{content:' ครั้ง';font-size:12px;font-weight:400;opacity:.65}
+.av{width:40px;height:40px;border-radius:50%;flex:none;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.av.lg{width:92px;height:92px;font-size:38px}
+select,input[type=text],input[type=password],input[type=email]{font:inherit;width:100%;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:46px;margin-top:8px}
+.seg{display:flex;gap:8px;margin-bottom:12px;background:var(--bg);padding:5px;border-radius:99px}
+.seg button{flex:1;border:0;background:none;color:var(--ink);font:800 14px 'Prompt',sans-serif;min-height:42px;border-radius:99px;cursor:pointer}
+.seg .on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(255,95,192,.4)}
+.err{color:#d6336c;min-height:22px;font-size:14px;margin:8px 0 0}
+.go{width:100%;margin-top:10px;background:var(--grad);color:#fff;min-height:52px;font-size:18px}
+.who2{text-align:center}
+.who2 .av{margin:6px auto}
+.seg3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;background:var(--panel);padding:6px;border-radius:99px;box-shadow:var(--shadow);margin-bottom:12px}
+.seg3 button{border:0;background:none;color:var(--ink);font:800 16px 'Prompt',sans-serif;min-height:46px;border-radius:99px;cursor:pointer}
+.seg3 button.on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(255,95,192,.4)}
+.rsum{display:table;margin:0 auto 12px;padding:4px 16px;border-radius:99px;background:var(--line);font-size:14px}
+nav{position:fixed;left:50%;right:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 24px),496px);transform:translateX(-50%);display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px;gap:4px;border-radius:30px;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(18px);border:1px solid var(--line);box-shadow:0 10px 34px rgba(139,79,255,.28);z-index:40}
+nav .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;padding:6px 4px;border-radius:24px;font:800 13px 'Prompt',sans-serif;color:var(--ink);border:0;background:transparent;cursor:pointer}
+nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-shadow:0 6px 16px rgba(232,63,168,.4)}
+.tab::before{font-size:20px;line-height:1}
+#nHome::before{content:'🏠'}#nRank::before{content:'🏆'}#nAcc::before{content:'👤'}
+.tip{font-size:13px;opacity:.75;margin:10px 0 0;text-align:center}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.sm{font:400 14px 'Prompt',sans-serif;border:2px solid rgba(139,79,255,.5);background:none;color:var(--ink);border-radius:99px;padding:6px 16px;min-height:40px;cursor:pointer;font-weight:800}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.big.pop{animation:pop .35s;transform-origin:right bottom}
 </style>
 </head>
 <body>
-<!-- The full body and complete JavaScript from the cleaned index.html will be uploaded. -->
+<main>
+<section id="pHome">
+  <div class="pill">จำนวนการลุกนั่ง</div>
+  <div class="camw"><div class="cam">
+    <video id="v" playsinline muted></video>
+    <canvas class="ov" id="ov" width="80" height="60"></canvas>
+    <div class="msg" id="msg">กดเริ่มลุกนั่ง แล้ววางมือถือให้เห็นตัวทั้งตัว</div>
+    <div class="state" id="state" hidden></div>
+    <div class="big" id="big">0</div>
+  </div></div>
+  <button class="pill" id="startBtn">เริ่มลุกนั่ง</button>
+  <div class="sub" id="sub">
+    <div class="st"><b id="today">0</b><span>วันนี้</span></div>
+    <div class="st"><b id="total">0</b><span>ทั้งหมด</span></div>
+  </div>
+</section>
+
+<section id="pRank" hidden>
+  <div class="seg3">
+    <button class="on" id="rkt">ประเทศไทย</button>
+    <button id="rkr">ภาค</button>
+    <button id="rkj">จังหวัด</button>
+  </div>
+  <div class="panel">
+    <h2 id="rt">อันดับประเทศไทย</h2>
+    <div class="rsum" id="rsum">กำลังโหลด...</div>
+    <ol class="list" id="list"></ol>
+  </div>
+  <p class="tip" id="rnote"></p>
+</section>
+
+<section id="pAcc" hidden>
+  <h2>ตั้งค่าบัญชี</h2>
+  <div class="panel" style="padding:16px">
+    <div id="authBox">
+      <div class="seg">
+        <button class="sm on" id="tLogin">เข้าสู่ระบบ</button>
+        <button class="sm" id="tReg">สมัครสมาชิก</button>
+      </div>
+      <input type="email" id="au" placeholder="อีเมล" autocomplete="email">
+      <input type="password" id="ap" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)" autocomplete="current-password">
+      <input type="text" id="uname" placeholder="ชื่อผู้ใช้ (3-16 ตัวอักษร)" maxlength="16" hidden>
+      <select id="ac" hidden></select>
+      <div class="err" id="aMsg" role="alert"></div>
+      <button class="pill go" id="aGo">เข้าสู่ระบบ</button>
+    </div>
+    <div id="profBox" class="who2" hidden>
+      <div id="pfAv" class="av lg">?</div>
+      <div style="font-weight:800;font-size:22px;margin:8px 0" id="pfName"></div>
+      <div style="opacity:.7;margin-bottom:8px" id="pfEmail"></div>
+      <select id="pc"></select>
+      <div class="row" style="margin-top:16px">
+        <button class="sm" id="outBtn">ออกจากระบบ</button>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button class="tab on" id="nHome">หน้าหลัก</button>
+  <button class="tab" id="nRank">อันดับ</button>
+  <button class="tab" id="nAcc">ตั้งค่าบัญชี</button>
+</nav>
+
 <script>
-console.log('Full script should be here');
+(function(){
+  // ========== Supabase ==========
+  const SUPABASE_URL = 'https://ogppjkdgggkzcvopzhsx.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ncHBqa2RnZ2dremN2b3B6aHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNTM0MDYsImV4cCI6MjEwNzcyOTQwNn0.T0768FKPsQ5Gu-EWY8lMZ5Odci3HseNYKkMGIwnZbWY';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ========== Thai regions ==========
+  const REG = {
+    'ภาคเหนือ':'เชียงราย เชียงใหม่ น่าน พะเยา แพร่ แม่ฮ่องสอน ลำปาง ลำพูน อุตรดิตถ์',
+    'ภาคกลาง':'กรุงเทพมหานคร กำแพงเพชร ชัยนาท นครนายก นครปฐม นครสวรรค์ นนทบุรี ปทุมธานี พระนครศรีอยุธยา พิจิตร พิษณุโลก เพชรบูรณ์ ลพบุรี สมุทรปราการ สมุทรสงคราม สมุทรสาคร สิงห์บุรี สุโขทัย สุพรรณบุรี สระบุรี อ่างทอง อุทัยธานี',
+    'ภาคตะวันออกเฉียงเหนือ':'กาฬสินธุ์ ขอนแก่น ชัยภูมิ นครพนม นครราชสีมา บึงกาฬ บุรีรัมย์ มหาสารคาม มุกดาหาร ยโสธร ร้อยเอ็ด เลย สกลนคร สุรินทร์ ศรีสะเกษ หนองคาย หนองบัวลำภู อำนาจเจริญ อุดรธานี อุบลราชธานี',
+    'ภาคตะวันออก':'จันทบุรี ฉะเชิงเทรา ชลบุรี ตราด ปราจีนบุรี ระยอง สระแก้ว',
+    'ภาคตะวันตก':'กาญจนบุรี ตาก ประจวบคีรีขันธ์ เพชรบุรี ราชบุรี',
+    'ภาคใต้':'กระบี่ ชุมพร ตรัง นครศรีธรรมราช นราธิวาส ปัตตานี พังงา พัทลุง ภูเก็ต ระนอง สงขลา สตูล สุราษฎร์ธานี ยะลา'
+  };
+  const RN = Object.keys(REG);
+  const PR = {};
+  RN.forEach(r => REG[r].split(' ').forEach(p => PR[p] = r));
+
+  // ========== Helpers ==========
+  const $ = id => document.getElementById(id);
+  let user = null;
+  let profile = null;
+  let data = { total: 0, today: 0 };
+  let rows = [];
+  let rankMode = 'th';
+  let selRegion = '', selProv = '';
+
+  function dkey() {
+    const d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+  }
+
+  function loadLocal() {
+    try {
+      const s = localStorage.getItem('situp_v2');
+      if (s) data = JSON.parse(s);
+    } catch(e){}
+    if (!data.days) data.days = {};
+    data.today = data.days[dkey()] || 0;
+  }
+  function saveLocal() {
+    data.days = data.days || {};
+    data.days[dkey()] = data.today;
+    try { localStorage.setItem('situp_v2', JSON.stringify(data)); } catch(e){}
+  }
+
+  // ========== Tabs ==========
+  function go(p) {
+    ['Home','Rank','Acc'].forEach(n => {
+      $('p'+n).hidden = n !== p;
+      $('n'+n).className = 'tab' + (n === p ? ' on' : '');
+    });
+    if (p === 'Acc') renderAcc();
+    if (p === 'Rank') loadLeaderboard();
+  }
+  ['Home','Rank','Acc'].forEach(n => $('n'+n).onclick = () => go(n));
+
+  // ========== Auth ==========
+  function amsg(t) { $('aMsg').textContent = t || ''; }
+
+  function fillProv(sel) {
+    sel.innerHTML = '';
+    const ph = document.createElement('option');
+    ph.value = ''; ph.textContent = 'เลือกจังหวัดของคุณ';
+    sel.appendChild(ph);
+    RN.forEach(r => {
+      const g = document.createElement('optgroup');
+      g.label = r;
+      REG[r].split(' ').forEach(p => {
+        const o = document.createElement('option');
+        o.value = p; o.textContent = p;
+        g.appendChild(o);
+      });
+      sel.appendChild(g);
+    });
+  }
+  fillProv($('ac'));
+  fillProv($('pc'));
+
+  let mode = 'login';
+  $('tLogin').onclick = () => {
+    mode = 'login';
+    $('tLogin').className = 'sm on'; $('tReg').className = 'sm';
+    $('uname').hidden = true; $('ac').hidden = true;
+    $('aGo').textContent = 'เข้าสู่ระบบ';
+    amsg('');
+  };
+  $('tReg').onclick = () => {
+    mode = 'reg';
+    $('tReg').className = 'sm on'; $('tLogin').className = 'sm';
+    $('uname').hidden = false; $('ac').hidden = false;
+    $('aGo').textContent = 'สมัครสมาชิก';
+    amsg('');
+  };
+
+  $('aGo').onclick = async () => {
+    const email = $('au').value.trim();
+    const pass = $('ap').value;
+    amsg('');
+    if (!email || !pass) { amsg('กรอกอีเมลและรหัสผ่าน'); return; }
+    if (pass.length < 6) { amsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
+    $('aGo').disabled = true;
+
+    try {
+      if (mode === 'reg') {
+        const uname = $('uname').value.trim();
+        const prov = $('ac').value;
+        if (!uname || uname.length < 3) { amsg('ชื่อผู้ใช้ต้องมี 3-16 ตัวอักษร'); return; }
+        if (!prov) { amsg('เลือกจังหวัดของคุณก่อน'); return; }
+
+        const { data: authData, error } = await sb.auth.signUp({ email, password: pass });
+        if (error) throw error;
+
+        const uid = authData.user.id;
+        const region = PR[prov] || '';
+        await sb.from('profiles').upsert({
+          id: uid,
+          email,
+          username: uname,
+          province: prov,
+          region,
+          total_situps: data.total || 0,
+          updated_at: new Date().toISOString()
+        });
+        amsg('สมัครสำเร็จ! ตรวจสอบอีเมลเพื่อยืนยัน (ถ้ามี)');
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+        if (error) throw error;
+      }
+      await refreshUser();
+      $('ap').value = '';
+    } catch (e) {
+      amsg(e.message || 'เกิดข้อผิดพลาด');
+    } finally {
+      $('aGo').disabled = false;
+    }
+  };
+
+  $('outBtn').onclick = async () => {
+    await sb.auth.signOut();
+    user = null; profile = null;
+    renderAcc();
+  };
+
+  $('pc').onchange = async () => {
+    if (!user || !profile) return;
+    const prov = $('pc').value;
+    const region = PR[prov] || '';
+    await sb.from('profiles').update({ province: prov, region, updated_at: new Date().toISOString() }).eq('id', user.id);
+    profile.province = prov;
+    profile.region = region;
+  };
+
+  async function refreshUser() {
+    const { data: { user: u } } = await sb.auth.getUser();
+    user = u;
+    if (user) {
+      const { data: p } = await sb.from('profiles').select('*').eq('id', user.id).single();
+      profile = p;
+      if (profile && profile.total_situps > data.total) {
+        data.total = profile.total_situps;
+        saveLocal();
+        renderHome();
+      }
+    } else {
+      profile = null;
+    }
+    renderAcc();
+  }
+
+  function renderAcc() {
+    if (user && profile) {
+      $('authBox').hidden = true;
+      $('profBox').hidden = false;
+      $('pfName').textContent = profile.username || 'ผู้ใช้';
+      $('pfEmail').textContent = user.email || '';
+      $('pfAv').textContent = (profile.username || '?')[0].toUpperCase();
+      $('pc').value = profile.province || '';
+    } else {
+      $('authBox').hidden = false;
+      $('profBox').hidden = true;
+    }
+  }
+
+  // ========== Leaderboard ==========
+  async function loadLeaderboard() {
+    $('rsum').textContent = 'กำลังโหลด...';
+    $('list').innerHTML = '';
+    let q = sb.from('profiles').select('id, username, province, region, total_situps, avatar_url').order('total_situps', { ascending: false }).limit(100);
+    if (rankMode === 'region' && selRegion) q = q.eq('region', selRegion);
+    if (rankMode === 'prov' && selProv) q = q.eq('province', selProv);
+
+    const { data: list, error } = await q;
+    if (error) {
+      $('rnote').textContent = 'โหลดอันดับไม่ได้: ' + error.message;
+      return;
+    }
+    rows = list || [];
+    renderRank();
+  }
+
+  function renderRank() {
+    const filtered = rows.filter(r => (r.total_situps || 0) > 0);
+    $('rsum').textContent = filtered.length ? `มีผู้เล่น ${filtered.length} คน` : 'ยังไม่มีข้อมูล';
+    $('list').innerHTML = '';
+    filtered.forEach((r, i) => {
+      const li = document.createElement('li');
+      if (user && r.id === user.id) li.classList.add('me');
+      const rkClass = i === 0 ? 'r1' : i === 1 ? 'r2' : i === 2 ? 'r3' : '';
+      li.innerHTML = `
+        <div class="rk ${rkClass}">${i+1}</div>
+        <div class="who">
+          <div class="av">${(r.username||'?')[0].toUpperCase()}</div>
+          <span>${r.username || 'ไม่ระบุ'}<br><small style="font-weight:400;opacity:.7">${r.province||''}</small></span>
+        </div>
+        <div class="cnt">${r.total_situps||0}</div>`;
+      $('list').appendChild(li);
+    });
+    $('rt').textContent = rankMode === 'th' ? 'อันดับประเทศไทย' : rankMode === 'region' ? 'อันดับภาค' : 'อันดับจังหวัด';
+  }
+
+  $('rkt').onclick = () => { rankMode = 'th'; selRegion=''; selProv=''; $('rkt').className='on'; $('rkr').className=''; $('rkj').className=''; loadLeaderboard(); };
+  $('rkr').onclick = () => { rankMode = 'region'; selRegion = profile?.region || 'ภาคตะวันออกเฉียงเหนือ'; $('rkr').className='on'; $('rkt').className=''; $('rkj').className=''; loadLeaderboard(); };
+  $('rkj').onclick = () => { rankMode = 'prov'; selProv = profile?.province || 'อุบลราชธานี'; $('rkj').className='on'; $('rkt').className=''; $('rkr').className=''; loadLeaderboard(); };
+
+  // ========== Camera & Counter ==========
+  let stream = null, counting = false, count = 0;
+  const video = $('v'), canvas = $('ov'), ctx = canvas.getContext('2d');
+
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false });
+      video.srcObject = stream;
+      await video.play();
+      $('msg').hidden = true;
+      $('state').hidden = false;
+      $('state').textContent = 'พร้อมนับ';
+      counting = true;
+      $('startBtn').textContent = 'หยุดนับ';
+      loop();
+    } catch (e) {
+      $('msg').textContent = 'ไม่สามารถเปิดกล้องได้: ' + (e.message || e);
+    }
+  }
+
+  function stopCamera() {
+    counting = false;
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+    video.srcObject = null;
+    $('msg').hidden = false;
+    $('state').hidden = true;
+    $('startBtn').textContent = 'เริ่มลุกนั่ง';
+  }
+
+  let prevBrightness = 0;
+  let phase = 0;
+  let cooldown = 0;
+
+  function loop() {
+    if (!counting) return;
+    if (video.readyState >= 2) {
+      canvas.width = 80; canvas.height = 60;
+      ctx.drawImage(video, 0, 0, 80, 60);
+      const frame = ctx.getImageData(0, 0, 80, 60);
+      let sum = 0;
+      for (let y = 20; y < 50; y++) {
+        for (let x = 25; x < 55; x++) {
+          const i = (y * 80 + x) * 4;
+          sum += (frame.data[i] + frame.data[i+1] + frame.data[i+2]) / 3;
+        }
+      }
+      const brightness = sum / (30 * 30);
+      const delta = brightness - prevBrightness;
+      prevBrightness = brightness;
+
+      if (cooldown > 0) cooldown--;
+
+      if (cooldown === 0 && Math.abs(delta) > 8) {
+        if (phase === 0 && delta < -5) {
+          phase = 1;
+          $('state').textContent = 'ลง...';
+        } else if (phase === 1 && delta > 5) {
+          phase = 0;
+          count++;
+          data.today++;
+          data.total++;
+          saveLocal();
+          renderHome();
+          $('big').textContent = count;
+          $('big').classList.remove('pop');
+          void $('big').offsetWidth;
+          $('big').classList.add('pop');
+          $('state').textContent = 'นับแล้ว!';
+          cooldown = 15;
+          pushScore();
+        }
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  $('startBtn').onclick = () => {
+    if (counting) {
+      stopCamera();
+      count = 0;
+      $('big').textContent = '0';
+    } else {
+      count = 0;
+      $('big').textContent = '0';
+      startCamera();
+    }
+  };
+
+  async function pushScore() {
+    if (!user || !profile) return;
+    try {
+      await sb.from('profiles').update({
+        total_situps: data.total,
+        updated_at: new Date().toISOString()
+      }).eq('id', user.id);
+
+      await sb.from('situp_records').insert({
+        user_id: user.id,
+        count: 1
+      });
+    } catch(e) { console.warn(e); }
+  }
+
+  function renderHome() {
+    $('today').textContent = data.today || 0;
+    $('total').textContent = data.total || 0;
+  }
+
+  // ========== Init ==========
+  loadLocal();
+  renderHome();
+  refreshUser().then(() => {
+    sb.auth.onAuthStateChange(() => refreshUser());
+  });
+  go('Home');
+})();
 </script>
 </body>
 </html>
