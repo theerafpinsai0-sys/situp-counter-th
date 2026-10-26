@@ -14,9 +14,9 @@
 body{background:radial-gradient(700px 420px at 100% -8%,rgba(255,95,192,.18),transparent 60%),radial-gradient(700px 480px at -10% 40%,rgba(139,79,255,.15),transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font-family:'Prompt',system-ui,sans-serif;padding-bottom:calc(108px + env(safe-area-inset-bottom,0px));min-height:100vh}
 main{max-width:520px;margin:0 auto;padding:16px 18px}
 h2{font-weight:800;font-size:22px;text-align:center;margin:6px 0 14px}
-.pill{display:block;margin:0 auto;background:var(--grad);color:#fff;border:0;border-radius:99px;font:800 18px/1.2 'Prompt',sans-serif;padding:14px 28px;text-align:center;width:max-content;max-width:100%;box-shadow:var(--shadow);cursor:pointer;min-height:52px}
+.pill{display:block;margin:12px auto 0;background:var(--grad);color:#fff;border:0;border-radius:99px;font:800 18px/1.2 'Prompt',sans-serif;padding:16px 28px;text-align:center;width:100%;max-width:100%;box-shadow:var(--shadow);cursor:pointer;min-height:56px}
 .pill:active{transform:scale(.96)}
-.cam-wrap{position:relative;margin:16px 0;border-radius:28px;overflow:hidden;background:var(--panel);aspect-ratio:3/4;max-height:52vh}
+.cam-wrap{position:relative;margin:12px 0;border-radius:28px;overflow:hidden;background:var(--panel);aspect-ratio:4/3;max-height:36vh}
 video#v{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 canvas#ov{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);pointer-events:none}
 .cam-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;background:rgba(15,14,23,.75);font-size:15px;line-height:1.5;z-index:2}
@@ -64,17 +64,17 @@ nav .tab.on{background:var(--grad);color:#fff}
 <body>
 <main>
 <section id="pHome">
-  <div class="pill" style="pointer-events:none">หลับตานั่งสมาธิ</div>
-  <div class="cam-wrap">
-    <video id="v" playsinline muted></video>
-    <canvas id="ov"></canvas>
-    <div class="cam-msg" id="camMsg">กดเริ่ม แล้ววางมือถือให้เห็นใบหน้า<br>ระบบจะนับเวลาเฉพาะตอนหลับตา</div>
-  </div>
+  <div class="pill" style="pointer-events:none;width:max-content;margin-left:auto;margin-right:auto;margin-bottom:8px">หลับตานั่งสมาธิ</div>
   <div class="timer" id="timer">00:00</div>
   <div class="status-pill idle" id="status">พร้อมเริ่ม</div>
   <p class="hint" id="hint">นั่งหลังตรง วางกล้องให้เห็นใบหน้า<br>หลับตา → เวลานับ | ลืมตา → หยุดนับ</p>
   <button class="pill" id="startBtn">เริ่มนั่งสมาธิ</button>
   <div class="row"><button class="sm" id="resetBtn" hidden>รีเซ็ตรอบนี้</button></div>
+  <div class="cam-wrap">
+    <video id="v" playsinline muted></video>
+    <canvas id="ov"></canvas>
+    <div class="cam-msg" id="camMsg">กดปุ่มเริ่มด้านบน<br>แล้ววางมือถือให้เห็นใบหน้า<br>ระบบนับเวลาเฉพาะตอนหลับตา</div>
+  </div>
   <div class="sub">
     <div class="st"><b id="today">0</b><span>วันนี้ (นาที)</span></div>
     <div class="st"><b id="total">0</b><span>รวมทั้งหมด (นาที)</span></div>
@@ -304,7 +304,7 @@ nav .tab.on{background:var(--grad);color:#fff}
     if (user && profile) {
       $('authBox').hidden = true; $('profBox').hidden = false;
       $('pfName').textContent = profile.username || 'ผู้ใช้';
-      $('pfEmail').textContent = profile.province || '';
+      $('pfEmailEmail').textContent = profile.province || '';
       $('pfAv').textContent = (profile.username || '?')[0].toUpperCase();
       $('pc').value = profile.province || '';
     } else {
@@ -527,7 +527,7 @@ nav .tab.on{background:var(--grad);color:#fff}
     $('status').textContent = 'หยุดแล้ว';
     $('status').className = 'status-pill idle';
     $('camMsg').style.display = '';
-    $('camMsg').innerHTML = 'กดเริ่ม แล้ววางมือถือให้เห็นใบหน้า<br>ระบบจะนับเวลาเฉพาะตอนหลับตา';
+    $('camMsg').innerHTML = 'กดปุ่มเริ่มด้านบน<br>แล้ววางมือถือให้เห็นใบหน้า<br>ระบบนับเวลาเฉพาะตอนหลับตา';
     $('hint').innerHTML = 'ดีมาก! พักแล้วเริ่มรอบใหม่ได้เมื่อพร้อม';
 
     if (!skipSave) {
