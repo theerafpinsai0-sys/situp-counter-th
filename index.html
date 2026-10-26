@@ -155,8 +155,17 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   let rows = [], rankMode = 'th', selRegion = '', selProv = '';
 
   function dkey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
-  function loadLocal(){ try{ const s=localStorage.getItem('situp_v2'); if(s) data=JSON.parse(s);}catch(e){} if(!data.days) data.days={}; data.today=data.days[dkey()]||0; }
-  function saveLocal(){ data.days=data.days||{}; data.days[dkey()]=data.today; try{ localStorage.setItem('situp_v2',JSON.stringify(data)); }catch(e){} }
+  function loadLocal(){
+    try{ const s=localStorage.getItem('situp_v2'); if(s) data=JSON.parse(s);}catch(e){}
+    if(!data.days) data.days={};
+    data.today = data.days[dkey()]||0;
+  }
+  function saveLocal(){
+    data.days=data.days||{};
+    data.days[dkey()]=data.today;
+    try{ localStorage.setItem('situp_v2',JSON.stringify(data)); }catch(e){}
+    if(user){ try{ localStorage.setItem('situp_today_'+user.id, String(data.today)); }catch(e){} }
+  }
 
   function go(p){
     ['Home','Rank','Acc'].forEach(n=>{$('p'+n).hidden=n!==p;$('n'+n).className='tab'+(n===p?' on':'');});
@@ -193,7 +202,9 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
         if(exist){ amsg('ชื่อผู้ใช้นี้มีคนใช้แล้ว'); return; }
         const {data:authData,error}=await sb.auth.signUp({email,password:pass});
         if(error) throw error;
-        await sb.from('profiles').upsert({id:authData.user.id,email,username:uname,province:prov,region:PR[prov]||'',total_situps:data.total||0,updated_at:new Date().toISOString()});
+        // บัญชีใหม่เริ่มที่ 0
+        await sb.from('profiles').upsert({id:authData.user.id,email,username:uname,province:prov,region:PR[prov]||'',total_situps:0,updated_at:new Date().toISOString()});
+        data.total=0; data.today=0; data.days={}; saveLocal();
         amsg('สมัครสำเร็จ!');
       } else {
         const {error}=await sb.auth.signInWithPassword({email,password:pass});
@@ -208,7 +219,13 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
     }finally{ $('aGo').disabled=false; }
   };
 
-  $('outBtn').onclick=async()=>{ await sb.auth.signOut(); user=null; profile=null; renderAcc(); };
+  $('outBtn').onclick=async()=>{
+    await sb.auth.signOut();
+    user=null; profile=null;
+    data.total=0; data.today=0; renderHome();
+    renderAcc();
+  };
+
   $('pc').onchange=async()=>{ if(!user||!profile) return; const prov=$('pc').value; await sb.from('profiles').update({province:prov,region:PR[prov]||'',updated_at:new Date().toISOString()}).eq('id',user.id); profile.province=prov; profile.region=PR[prov]||''; };
 
   async function refreshUser(){
@@ -217,7 +234,13 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
     if(user){
       const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
       profile=p;
-      if(profile&&profile.total_situps>data.total){ data.total=profile.total_situps; saveLocal(); renderHome(); }
+      if(profile){
+        // โหลดคะแนนจากเซิร์ฟเวอร์เป็นหลัก
+        data.total = profile.total_situps || 0;
+        const key = 'situp_today_' + user.id;
+        try{ const t=localStorage.getItem(key); data.today=t?parseInt(t,10)||0:0; }catch(e){ data.today=0; }
+        saveLocal(); renderHome();
+      }
     } else profile=null;
     renderAcc();
   }
