@@ -154,7 +154,10 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   let data = { total: 0, today: 0 };
   let rows = [], rankMode = 'th', selRegion = '', selProv = '';
 
-  function dkey(){ const d=new Date(); return d.getFullYear()+() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
+  function dkey(){
+    const d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+  }
   function loadLocal(){
     try{ const s=localStorage.getItem('situp_v2'); if(s) data=JSON.parse(s);}catch(e){}
     if(!data.days) data.days={};
@@ -202,7 +205,6 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
         if(exist){ amsg('ชื่อผู้ใช้นี้มีคนใช้แล้ว'); return; }
         const {data:authData,error}=await sb.auth.signUp({email,password:pass});
         if(error) throw error;
-        // บัญชีใหม่เริ่มที่ 0 เสมอ
         await sb.from('profiles').upsert({id:authData.user.id,email,username:uname,province:prov,region:PR[prov]||'',total_situps:0,updated_at:new Date().toISOString()});
         data.total=0; data.today=0; data.days={}; saveLocal();
         amsg('สมัครสำเร็จ!');
@@ -369,7 +371,6 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   async function pushScore(){
     if(!user||!profile) return;
     try{
-      // อ่านจากเซิร์ฟเวอร์แล้วบวก 1 (กันคะแนนบัญชีเก่าย้ายมา)
       const { data: cur } = await sb.from('profiles').select('total_situps').eq('id', user.id).single();
       const next = (cur && cur.total_situps ? cur.total_situps : 0) + 1;
       await sb.from('profiles').update({
@@ -380,11 +381,7 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
       if (profile) profile.total_situps = next;
       saveLocal();
       renderHome();
-
-      await sb.from('situp_records').insert({
-        user_id: user.id,
-        count: 1
-      });
+      await sb.from('situp_records').insert({ user_id: user.id, count: 1 });
     }catch(e){ console.warn(e); }
   }
 
