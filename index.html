@@ -3,84 +3,157 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>นับลุกนั่ง</title>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;800&display=swap" rel="stylesheet">
+<title>หลับตานั่งสมาธิ</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--bg:#fff;--panel:#EFE9FA;--ink:#0A0A0A;--pink:#FF5FC0;--lilac:#E0A9EF;--purple:#8B4FFF;--ok:#0b7a5a;--grad:linear-gradient(135deg,#FF5FC0,#8B4FFF);--shadow:0 10px 30px rgba(139,79,255,.2);--line:rgba(139,79,255,.2)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15121C;--panel:#2A2440;--ink:#F5F2FB;--ok:#4FD1A5;--line:rgba(224,169,239,.18)}}
-*{box-sizing:border-box}html,body{margin:0}
-body{background:radial-gradient(700px 420px at 100% -8%,rgba(255,95,192,.25),transparent 60%),radial-gradient(700px 480px at -10% 40%,rgba(139,79,255,.2),transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font-family:'Prompt',system-ui,sans-serif;padding-bottom:calc(108px + env(safe-area-inset-bottom,0px))}
-main{max-width:520px;margin:0 auto;padding:14px 18px}
-h2{font-weight:800;font-size:22px;text-align:center;margin:6px 0 12px}
-.pill{display:block;margin:0 auto;background:var(--grad);color:#fff;border:0;border-radius:99px;font:800 20px/1.2 'Prompt',sans-serif;padding:14px 28px;text-align:center;width:max-content;max-width:100%;box-shadow:var(--shadow)}
-button.pill{cursor:pointer;min-height:48px;transition:transform .12s}
-button.pill:active{transform:scale(.96)}
-.camw{position:relative;margin:16px 0;border-radius:32px}
-.cam{position:relative;background:var(--panel);border-radius:32px;overflow:hidden;aspect-ratio:3/4;max-height:62vh;width:100%;z-index:1}
-video,canvas.ov{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:16px;line-height:1.5;opacity:.8;padding:20px;gap:10px}
-.msg::before{content:'📷';font-size:56px}
-.big{position:absolute;right:12px;bottom:12px;font-weight:800;font-size:76px;line-height:1;color:#fff;background:rgba(0,0,0,.34);backdrop-filter:blur(8px);border-radius:26px;padding:4px 20px 10px;text-shadow:0 2px 14px rgba(0,0,0,.65)}
-.state{position:absolute;left:12px;top:12px;background:rgba(0,0,0,.6);color:#fff;border-radius:99px;padding:5px 14px;font-size:13px;backdrop-filter:blur(8px)}
-.sub{display:grid;grid-template-columns:1fr 1fr;background:var(--panel);border-radius:22px;padding:12px 0;margin:16px 0 4px;text-align:center}
-.st b{display:block;font-size:30px;line-height:1.15;font-weight:800}
-.st span{font-size:13px;font-weight:400;opacity:.7}
+:root{
+  --bg:#0f0e17; --panel:#1a1830; --ink:#f5f2fb;
+  --pink:#FF5FC0; --purple:#8B4FFF; --mint:#4FD1A5;
+  --grad:linear-gradient(135deg,#FF5FC0,#8B4FFF);
+  --shadow:0 10px 30px rgba(139,79,255,.25);
+  --line:rgba(224,169,239,.15);
+}
+*{box-sizing:border-box} html,body{margin:0}
+body{
+  background:
+    radial-gradient(700px 420px at 100% -8%,rgba(255,95,192,.18),transparent 60%),
+    radial-gradient(700px 480px at -10% 40%,rgba(139,79,255,.15),transparent 60%),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--ink);
+  font-family:'Prompt',system-ui,sans-serif;
+  padding-bottom:calc(108px + env(safe-area-inset-bottom,0px));
+  min-height:100vh;
+}
+main{max-width:520px;margin:0 auto;padding:16px 18px}
+h2{font-weight:800;font-size:22px;text-align:center;margin:6px 0 14px}
+.pill{
+  display:block;margin:0 auto;background:var(--grad);color:#fff;border:0;border-radius:99px;
+  font:800 18px/1.2 'Prompt',sans-serif;padding:14px 28px;text-align:center;
+  width:max-content;max-width:100%;box-shadow:var(--shadow);cursor:pointer;
+  min-height:52px;transition:transform .12s;
+}
+.pill:active{transform:scale(.96)}
+.timer-wrap{
+  margin:20px 0 16px;border-radius:32px;background:var(--panel);
+  padding:28px 20px;text-align:center;box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+}
+.timer-wrap::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 30%,rgba(139,79,255,.2),transparent 70%);
+  pointer-events:none;
+}
+.timer{
+  font-weight:800;font-size:64px;letter-spacing:2px;line-height:1.1;
+  background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;position:relative;
+}
+.timer-label{font-size:14px;opacity:.7;margin-top:8px}
+.status-pill{
+  display:inline-block;margin-top:14px;padding:6px 16px;border-radius:99px;
+  background:rgba(79,209,165,.15);color:var(--mint);font-size:13px;font-weight:600;
+}
+.status-pill.idle{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)}
+.status-pill.run{background:rgba(79,209,165,.2);color:var(--mint)}
+.hint{text-align:center;font-size:14px;opacity:.7;margin:12px 0 4px;line-height:1.5}
+.sub{
+  display:grid;grid-template-columns:1fr 1fr;background:var(--panel);
+  border-radius:22px;padding:14px 0;margin:16px 0 4px;text-align:center;
+}
+.st b{display:block;font-size:28px;line-height:1.15;font-weight:800}
+.st span{font-size:13px;font-weight:400;opacity:.65}
 .st+.st{border-left:1px solid var(--line)}
 .panel{background:var(--panel);border-radius:28px;padding:16px 8px 8px;box-shadow:var(--shadow)}
-.list{list-style:none;margin:0;padding:0;max-height:62vh;overflow-y:auto}
-.list li{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;min-height:64px;border-bottom:1px solid var(--line);padding:4px 10px 4px 14px}
-.list li.me{background:rgba(255,95,192,.25);border-radius:12px}
-.list li.empty{opacity:.5}
-.rk{font-size:30px;text-align:center;font-weight:800}
-.rk.r1{background:linear-gradient(135deg,#FFE27A,#F5A100);color:#4a3000;width:40px;height:40px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:22px}
-.rk.r2{background:linear-gradient(135deg,#EEF2F7,#98A4B5);color:#2b3340;width:40px;height:40px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:22px}
-.rk.r3{background:linear-gradient(135deg,#F2B07A,#B5651D);color:#3b1d05;width:40px;height:40px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:22px}
+.list{list-style:none;margin:0;padding:0;max-height:58vh;overflow-y:auto}
+.list li{
+  display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;
+  min-height:64px;border-bottom:1px solid var(--line);padding:4px 10px 4px 14px;
+}
+.list li.me{background:rgba(255,95,192,.2);border-radius:12px}
+.list li.empty{opacity:.45}
+.rk{font-size:26px;text-align:center;font-weight:800}
+.rk.r1{background:linear-gradient(135deg,#FFE27A,#F5A100);color:#4a3000;width:38px;height:38px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:18px}
+.rk.r2{background:linear-gradient(135deg,#EEF2F7,#98A4B5);color:#2b3340;width:38px;height:38px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:18px}
+.rk.r3{background:linear-gradient(135deg,#F2B07A,#B5651D);color:#3b1d05;width:38px;height:38px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:18px}
 .who{display:flex;align-items:center;gap:10px;min-width:0;font-weight:800}
 .who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cnt{font-weight:800;font-size:22px}
-.cnt::after{content:' ครั้ง';font-size:12px;font-weight:400;opacity:.65}
-.av{width:40px;height:40px;border-radius:50%;flex:none;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;object-fit:cover;box-shadow:0 2px 6px rgba(0,0,0,.2)}
-.av.lg{width:92px;height:92px;font-size:38px}
-select,input[type=text],input[type=password]{font:inherit;width:100%;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:46px;margin-top:8px}
-.seg{display:flex;gap:8px;margin-bottom:12px;background:var(--bg);padding:5px;border-radius:99px}
+.cnt{font-weight:800;font-size:20px}
+.cnt::after{content:' นาที';font-size:12px;font-weight:400;opacity:.65}
+.av{
+  width:40px;height:40px;border-radius:50%;flex:none;background:var(--grad);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:800;object-fit:cover;
+}
+.av.lg{width:88px;height:88px;font-size:36px}
+select,input[type=text],input[type=password]{
+  font:inherit;width:100%;color:var(--ink);background:rgba(0,0,0,.25);
+  border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:46px;margin-top:8px;
+}
+.seg{display:flex;gap:8px;margin-bottom:12px;background:rgba(0,0,0,.2);padding:5px;border-radius:99px}
 .seg button{flex:1;border:0;background:none;color:var(--ink);font:800 14px 'Prompt',sans-serif;min-height:42px;border-radius:99px;cursor:pointer}
-.seg .on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(255,95,192,.4)}
-.err{color:#d6336c;min-height:22px;font-size:14px;margin:8px 0 0}
-.go{width:100%;margin-top:10px;background:var(--grad);color:#fff;min-height:52px;font-size:18px}
+.seg .on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(255,95,192,.35)}
+.err{color:#ff7b9c;min-height:22px;font-size:14px;margin:8px 0 0}
+.go{width:100%;margin-top:10px}
 .who2{text-align:center}
 .who2 .av{margin:6px auto}
-.seg3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;background:var(--panel);padding:6px;border-radius:99px;box-shadow:var(--shadow);margin-bottom:12px}
-.seg3 button{border:0;background:none;color:var(--ink);font:800 16px 'Prompt',sans-serif;min-height:46px;border-radius:99px;cursor:pointer}
-.seg3 button.on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(255,95,192,.4)}
+.seg3{
+  display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;background:var(--panel);
+  padding:6px;border-radius:99px;box-shadow:var(--shadow);margin-bottom:12px;
+}
+.seg3 button{border:0;background:none;color:var(--ink);font:800 15px 'Prompt',sans-serif;min-height:46px;border-radius:99px;cursor:pointer}
+.seg3 button.on{background:var(--grad);color:#fff}
 .rsum{display:table;margin:0 auto 12px;padding:4px 16px;border-radius:99px;background:var(--line);font-size:14px}
-nav{position:fixed;left:50%;right:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 24px),496px);transform:translateX(-50%);display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px;gap:4px;border-radius:30px;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(18px);border:1px solid var(--line);box-shadow:0 10px 34px rgba(139,79,255,.28);z-index:40}
-nav .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;padding:6px 4px;border-radius:24px;font:800 13px 'Prompt',sans-serif;color:var(--ink);border:0;background:transparent;cursor:pointer}
-nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-shadow:0 6px 16px rgba(232,63,168,.4)}
+nav{
+  position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  width:min(calc(100% - 24px),496px);transform:translateX(-50%);
+  display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px;gap:4px;border-radius:30px;
+  background:rgba(15,14,23,.85);backdrop-filter:blur(18px);
+  border:1px solid var(--line);box-shadow:0 10px 34px rgba(139,79,255,.28);z-index:40;
+}
+nav .tab{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  min-height:58px;padding:6px 4px;border-radius:24px;font:800 13px 'Prompt',sans-serif;
+  color:var(--ink);border:0;background:transparent;cursor:pointer;
+}
+nav .tab.on{background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(232,63,168,.35)}
 .tab::before{font-size:20px;line-height:1}
-#nHome::before{content:'🏠'}#nRank::before{content:'🏆'}#nAcc::before{content:'👤'}
-.tip{font-size:13px;opacity:.75;margin:10px 0 0;text-align:center}
-.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
-.sm{font:400 14px 'Prompt',sans-serif;border:2px solid rgba(139,79,255,.5);background:none;color:var(--ink);border-radius:99px;padding:6px 16px;min-height:40px;cursor:pointer;font-weight:800}
-@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
-.big.pop{animation:pop .35s;transform-origin:right bottom}
+#nHome::before{content:'🧘'} #nRank::before{content:'🏆'} #nAcc::before{content:'👤'}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.sm{
+  font:800 14px 'Prompt',sans-serif;border:2px solid rgba(139,79,255,.5);
+  background:none;color:var(--ink);border-radius:99px;padding:6px 16px;min-height:40px;cursor:pointer;
+}
+.breath{
+  width:120px;height:120px;border-radius:50%;margin:16px auto 8px;
+  background:radial-gradient(circle,rgba(255,95,192,.4),rgba(139,79,255,.15));
+  animation:none;opacity:.8;
+}
+.breath.run{animation:breathe 8s ease-in-out infinite}
+@keyframes breathe{
+  0%,100%{transform:scale(.85);opacity:.5}
+  50%{transform:scale(1.1);opacity:1}
+}
 </style>
 </head>
 <body>
 <main>
 <section id="pHome">
-  <div class="pill">จำนวนการลุกนั่ง</div>
-  <div class="camw"><div class="cam">
-    <video id="v" playsinline muted></video>
-    <canvas class="ov" id="ov" width="160" height="120"></canvas>
-    <div class="msg" id="msg">กดเริ่มลุกนั่ง แล้ววางมือถือให้เห็นตัวทั้งตัว</div>
-    <div class="state" id="state" hidden></div>
-    <div class="big" id="big">0</div>
-  </div></div>
-  <button class="pill" id="startBtn">เริ่มลุกนั่ง</button>
-  <div class="sub" id="sub">
-    <div class="st"><b id="today">0</b><span>วันนี้</span></div>
-    <div class="st"><b id="total">0</b><span>ทั้งหมด</span></div>
+  <div class="pill" style="pointer-events:none">หลับตานั่งสมาธิ</div>
+  <div class="timer-wrap">
+    <div class="breath" id="breath"></div>
+    <div class="timer" id="timer">00:00</div>
+    <div class="timer-label">นาที : วินาที</div>
+    <div class="status-pill idle" id="status">พร้อมเริ่ม</div>
+  </div>
+  <p class="hint" id="hint">นั่งหลังตรง หลับตา หายใจเข้า-ออกลึก ๆ<br>กดเริ่มเมื่อพร้อม</p>
+  <button class="pill" id="startBtn">เริ่มนั่งสมาธิ</button>
+  <div class="row">
+    <button class="sm" id="resetBtn" hidden>รีเซ็ตรอบนี้</button>
+  </div>
+  <div class="sub">
+    <div class="st"><b id="today">0</b><span>วันนี้ (นาที)</span></div>
+    <div class="st"><b id="total">0</b><span>รวมทั้งหมด (นาที)</span></div>
   </div>
 </section>
 
@@ -95,7 +168,7 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
     <div class="rsum" id="rsum">กำลังโหลด...</div>
     <ol class="list" id="list"></ol>
   </div>
-  <p class="tip" id="rnote"></p>
+  <p class="hint" id="rnote"></p>
 </section>
 
 <section id="pAcc" hidden>
@@ -154,241 +227,321 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   let data = { total: 0, today: 0 };
   let rows = [], rankMode = 'th', selRegion = '', selProv = '';
 
+  let running = false;
+  let startTs = 0;
+  let elapsedMs = 0;
+  let tickTimer = null;
+  let lastSavedMin = 0;
+
   function dkey(){
     const d = new Date();
     return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
   }
   function loadLocal(){
-    try{ const s=localStorage.getItem('situp_v2'); if(s) data=JSON.parse(s);}catch(e){}
-    if(!data.days) data.days={};
-    data.today = data.days[dkey()]||0;
+    try{
+      const s = localStorage.getItem('meditate_v1');
+      if(s) data = JSON.parse(s);
+    }catch(e){}
+    if(!data.days) data.days = {};
+    data.today = data.days[dkey()] || 0;
   }
   function saveLocal(){
-    data.days=data.days||{};
-    data.days[dkey()]=data.today;
-    try{ localStorage.setItem('situp_v2',JSON.stringify(data)); }catch(e){}
-    if(user){ try{ localStorage.setItem('situp_today_'+user.id, String(data.today)); }catch(e){} }
+    data.days = data.days || {};
+    data.days[dkey()] = data.today;
+    try{ localStorage.setItem('meditate_v1', JSON.stringify(data)); }catch(e){}
+    if(user){
+      try{ localStorage.setItem('meditate_today_'+user.id, String(data.today)); }catch(e){}
+    }
+  }
+
+  function fmt(ms){
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
   }
 
   function go(p){
-    ['Home','Rank','Acc'].forEach(n=>{$('p'+n).hidden=n!==p;$('n'+n).className='tab'+(n===p?' on':'');});
+    ['Home','Rank','Acc'].forEach(n=>{
+      $('p'+n).hidden = n !== p;
+      $('n'+n).className = 'tab' + (n===p ? ' on' :');
+    });
     if(p==='Acc') renderAcc();
     if(p==='Rank') loadLeaderboard();
   }
-  ['Home','Rank','Acc'].forEach(n=>$('n'+n).onclick=()=>go(n));
+  ['Home','Rank','Acc'].forEach(n => $('n'+n).onclick = () => go(n));
 
-  function amsg(t){ $('aMsg').textContent=t||''; }
+  function amsg(t){ $('aMsg').textContent = t || ''; }
   function fillProv(sel){
-    sel.innerHTML=''; const ph=document.createElement('option'); ph.value=''; ph.textContent='เลือกจังหวัดของคุณ'; sel.appendChild(ph);
-    RN.forEach(r=>{ const g=document.createElement('optgroup'); g.label=r; REG[r].split(' ').forEach(p=>{ const o=document.createElement('option'); o.value=p; o.textContent=p; g.appendChild(o); }); sel.appendChild(g); });
+    sel.innerHTML = '';
+    const ph = document.createElement('option');
+    ph.value=''; ph.textContent='เลือกจังหวัดของคุณ';
+    sel.appendChild(ph);
+    RN.forEach(r=>{
+      const g = document.createElement('optgroup'); g.label = r;
+      REG[r].split(' ').forEach(p=>{
+        const o = document.createElement('option'); o.value=p; o.textContent=p;
+        g.appendChild(o);
+      });
+      sel.appendChild(g);
+    });
   }
   fillProv($('ac')); fillProv($('pc'));
 
-  let mode='login';
-  $('tLogin').onclick=()=>{ mode='login'; $('tLogin').className='sm on'; $('tReg').className='sm'; $('ac').hidden=true; $('aGo').textContent='เข้าสู่ระบบ'; amsg(''); };
-  $('tReg').onclick=()=>{ mode='reg'; $('tReg').className='sm on'; $('tLogin').className='sm'; $('ac').hidden=false; $('aGo').textContent='สมัครสมาชิก'; amsg(''); };
+  let mode = 'login';
+  $('tLogin').onclick = ()=>{
+    mode='login'; $('tLogin').className='sm on'; $('tReg').className='sm';
+    $('ac').hidden=true; $('aGo').textContent='เข้าสู่ระบบ'; amsg('');
+  };
+  $('tReg').onclick = ()=>{
+    mode='reg'; $('tReg').className='sm on'; $('tLogin').className='sm';
+    $('ac').hidden=false; $('aGo').textContent='สมัครสมาชิก'; amsg('');
+  };
 
-  function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'')+'@situp.app'; }
+  function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'') + '@meditate.app'; }
 
-  $('aGo').onclick=async()=>{
-    const uname=$('au').value.trim(), pass=$('ap').value;
+  $('aGo').onclick = async ()=>{
+    const uname = $('au').value.trim(), pass = $('ap').value;
     amsg('');
-    if(!uname||uname.length<3){ amsg('ชื่อผู้ใช้ต้องมี 3-16 ตัวอักษร'); return; }
-    if(!pass||pass.length<6){ amsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
-    $('aGo').disabled=true;
-    const email=toEmail(uname);
+    if(!uname || uname.length < 3){ amsg('ชื่อผู้ใช้ต้องมี 3-16 ตัวอักษร'); return; }
+    if(!pass || pass.length < 6){ amsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
+    $('aGo').disabled = true;
+    const email = toEmail(uname);
     try{
-      if(mode==='reg'){
-        const prov=$('ac').value;
+      if(mode === 'reg'){
+        const prov = $('ac').value;
         if(!prov){ amsg('เลือกจังหวัดของคุณก่อน'); return; }
-        const {data:exist}=await sb.from('profiles').select('id').ilike('username',uname).maybeSingle();
+        const { data: exist } = await sb.from('profiles').select('id').ilike('username', uname).maybeSingle();
         if(exist){ amsg('ชื่อผู้ใช้นี้มีคนใช้แล้ว'); return; }
-        const {data:authData,error}=await sb.auth.signUp({email,password:pass});
+        const { data: authData, error } = await sb.auth.signUp({ email, password: pass });
         if(error) throw error;
-        await sb.from('profiles').upsert({id:authData.user.id,email,username:uname,province:prov,region:PR[prov]||'',total_situps:0,updated_at:new Date().toISOString()});
-        data.total=0; data.today=0; data.days={}; saveLocal();
+        await sb.from('profiles').upsert({
+          id: authData.user.id, email, username: uname,
+          province: prov, region: PR[prov]||'',
+          total_situps: 0, updated_at: new Date().toISOString()
+        });
+        data.total = 0; data.today = 0; data.days = {}; saveLocal();
         amsg('สมัครสำเร็จ!');
       } else {
-        const {error}=await sb.auth.signInWithPassword({email,password:pass});
+        const { error } = await sb.auth.signInWithPassword({ email, password: pass });
         if(error) throw error;
       }
-      await refreshUser(); $('ap').value='';
+      await refreshUser();
+      $('ap').value = '';
     }catch(e){
-      let msg=e.message||'เกิดข้อผิดพลาด';
-      if(msg.includes('Invalid login')) msg='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
-      if(msg.includes('already registered')) msg='ชื่อผู้ใช้นี้มีคนใช้แล้ว';
+      let msg = e.message || 'เกิดข้อผิดพลาด';
+      if(msg.includes('Invalid login')) msg = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+      if(msg.includes('already registered')) msg = 'ชื่อผู้ใช้นี้มีคนใช้แล้ว';
       amsg(msg);
-    }finally{ $('aGo').disabled=false; }
+    }finally{ $('aGo').disabled = false; }
   };
 
-  $('outBtn').onclick=async()=>{
+  $('outBtn').onclick = async ()=>{
+    if(running) stopSession(true);
     await sb.auth.signOut();
-    user=null; profile=null;
-    data.total=0; data.today=0; renderHome();
-    renderAcc();
+    user = null; profile = null;
+    data.total = 0; data.today = 0;
+    renderHome(); renderAcc();
   };
 
-  $('pc').onchange=async()=>{ if(!user||!profile) return; const prov=$('pc').value; await sb.from('profiles').update({province:prov,region:PR[prov]||'',updated_at:new Date().toISOString()}).eq('id',user.id); profile.province=prov; profile.region=PR[prov]||''; };
+  $('pc').onchange = async ()=>{
+    if(!user || !profile) return;
+    const prov = $('pc').value;
+    await sb.from('profiles').update({
+      province: prov, region: PR[prov]||'', updated_at: new Date().toISOString()
+    }).eq('id', user.id);
+    profile.province = prov; profile.region = PR[prov]||'';
+  };
 
   async function refreshUser(){
-    const {data:{user:u}}=await sb.auth.getUser();
-    user=u;
+    const { data: { user: u } } = await sb.auth.getUser();
+    user = u;
     if(user){
-      const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
-      profile=p;
+      const { data: p } = await sb.from('profiles').select('*').eq('id', user.id).single();
+      profile = p;
       if(profile){
         data.total = profile.total_situps || 0;
-        const key = 'situp_today_' + user.id;
-        try{ const t=localStorage.getItem(key); data.today=t?parseInt(t,10)||0:0; }catch(e){ data.today=0; }
+        const key = 'meditate_today_' + user.id;
+        try{
+          const t = localStorage.getItem(key);
+          data.today = t ? parseFloat(t) || 0 : 0;
+        }catch(e){ data.today = 0; }
         saveLocal(); renderHome();
       }
-    } else profile=null;
+    } else profile = null;
     renderAcc();
   }
 
   function renderAcc(){
-    if(user&&profile){
-      $('authBox').hidden=true; $('profBox').hidden=false;
-      $('pfName').textContent=profile.username||'ผู้ใช้';
-      $('pfEmail').textContent=profile.province||'';
-      $('pfAv').textContent=(profile.username||'?')[0].toUpperCase();
-      $('pc').value=profile.province||'';
-    } else { $('authBox').hidden=false; $('profBox').hidden=true; }
+    if(user && profile){
+      $('authBox').hidden = true; $('profBox').hidden = false;
+      $('pfName').textContent = profile.username || 'ผู้ใช้';
+      $('pfEmail').textContent = profile.province || '';
+      $('pfAv').textContent = (profile.username || '?')[0].toUpperCase();
+      $('pc').value = profile.province || '';
+    } else {
+      $('authBox').hidden = false; $('profBox').hidden = true;
+    }
   }
 
   async function loadLeaderboard(){
-    $('rsum').textContent='กำลังโหลด...'; $('list').innerHTML='';
-    let q=sb.from('profiles').select('id,username,province,region,total_situps,avatar_url').order('total_situps',{ascending:false}).limit(100);
-    if(rankMode==='region'&&selRegion) q=q.eq('region',selRegion);
-    if(rankMode==='prov'&&selProv) q=q.eq('province',selProv);
-    const {data:list,error}=await q;
-    if(error){ $('rnote').textContent='โหลดอันดับไม่ได้: '+error.message; return; }
-    rows=list||[]; renderRank();
+    $('rsum').textContent = 'กำลังโหลด...';
+    $('list').innerHTML = '';
+    let q = sb.from('profiles')
+      .select('id, username, province, region, total_situps, avatar_url')
+      .order('total_situps', { ascending: false })
+      .limit(100);
+    if(rankMode === 'region' && selRegion) q = q.eq('region', selRegion);
+    if(rankMode === 'prov' && selProv) q = q.eq('province', selProv);
+    const { data: list, error } = await q;
+    if(error){ $('rnote').textContent = 'โหลดอันดับไม่ได้: ' + error.message; return; }
+    rows = list || [];
+    renderRank();
   }
 
   function renderRank(){
-    const filtered=rows.filter(r=>(r.total_situps||0)>0);
-    const totalShow=Math.max(10,filtered.length);
-    $('rsum').textContent=filtered.length?`มีผู้เล่น ${filtered.length} คน`:'ยังไม่มีผู้เล่นในอันดับนี้';
-    $('list').innerHTML='';
-    for(let i=0;i<totalShow;i++){
-      const r=filtered[i];
-      const li=document.createElement('li');
-      if(r&&user&&r.id===user.id) li.classList.add('me');
+    const filtered = rows.filter(r => (r.total_situps || 0) > 0);
+    const totalShow = Math.max(10, filtered.length);
+    $('rsum').textContent = filtered.length ? `มีผู้เล่น ${filtered.length} คน` : 'ยังไม่มีผู้เล่นในอันดับนี้';
+    $('list').innerHTML = '';
+    for(let i = 0; i < totalShow; i++){
+      const r = filtered[i];
+      const li = document.createElement('li');
+      if(r && user && r.id === user.id) li.classList.add('me');
       if(!r) li.classList.add('empty');
-      const rk=i===0?'r1':i===1?'r2':i===2?'r3':'';
+      const rk = i===0 ? 'r1' : i===1 ? 'r2' : i===2 ? 'r3' : '';
       if(r){
-        li.innerHTML=`<div class="rk ${rk}">${i+1}</div><div class="who"><div class="av">${(r.username||'?')[0].toUpperCase()}</div><span>${r.username||'ไม่ระบุ'}<br><small style="font-weight:400;opacity:.7">${r.province||''}</small></span></div><div class="cnt">${r.total_situps||0}</div>`;
+        const mins = Math.round(r.total_situps || 0);
+        li.innerHTML = `<div class="rk ${rk}">${i+1}</div><div class="who"><div class="av">${(r.username||'?')[0].toUpperCase()}</div><span>${r.username||'ไม่ระบุ'}<br><small style="font-weight:400;opacity:.7">${r.province||''}</small></span></div><div class="cnt">${mins}</div>`;
       } else {
-        li.innerHTML=`<div class="rk">${i+1}</div><div class="who"><div class="av" style="opacity:.3">?</div><span style="opacity:.4">ว่าง</span></div><div class="cnt" style="opacity:.3">-</div>`;
+        li.innerHTML = `<div class="rk">${i+1}</div><div class="who"><div class="av" style="opacity:.3">?</div><span style="opacity:.4">ว่าง</span></div><div class="cnt" style="opacity:.3">-</div>`;
       }
       $('list').appendChild(li);
     }
-    $('rt').textContent=rankMode==='th'?'อันดับประเทศไทย':rankMode==='region'?'อันดับภาค':'อันดับจังหวัด';
+    $('rt').textContent = rankMode==='th' ? 'อันดับประเทศไทย' : rankMode==='region' ? 'อันดับภาค' : 'อันดับจังหวัด';
   }
 
-  $('rkt').onclick=()=>{ rankMode='th'; selRegion=''; selProv=''; $('rkt').className='on'; $('rkr').className=''; $('rkj').className=''; loadLeaderboard(); };
-  $('rkr').onclick=()=>{ rankMode='region'; selRegion=profile?.region||'ภาคตะวันออกเฉียงเหนือ'; $('rkr').className='on'; $('rkt').className=''; $('rkj').className=''; loadLeaderboard(); };
-  $('rkj').onclick=()=>{ rankMode='prov'; selProv=profile?.province||'อุบลราชธานี'; $('rkj').className='on'; $('rkt').className=''; $('rkr').className=''; loadLeaderboard(); };
+  $('rkt').onclick = ()=>{ rankMode='th'; selRegion=''; selProv=''; $('rkt').className='on'; $('rkr').className=''; $('rkj').className=''; loadLeaderboard(); };
+  $('rkr').onclick = ()=>{ rankMode='region'; selRegion=profile?.region||'ภาคตะวันออกเฉียงเหนือ'; $('rkr').className='on'; $('rkt').className=''; $('rkj').className=''; loadLeaderboard(); };
+  $('rkj').onclick = ()=>{ rankMode='prov'; selProv=profile?.province||'อุบลราชธานี'; $('rkj').className='on'; $('rkt').className=''; $('rkr').className=''; loadLeaderboard(); };
 
-  let stream=null, counting=false, count=0;
-  const video=$('v'), canvas=$('ov'), ctx=canvas.getContext('2d');
-  let hist=[], phase=0, downHold=0, upHold=0, cooldown=0;
-  const HIST_LEN=18;
+  function updateDisplay(){
+    const now = running ? (elapsedMs + (Date.now() - startTs)) : elapsedMs;
+    $('timer').textContent = fmt(now);
+  }
 
-  async function startCamera(){
-    if(!user||!profile){
-      $('msg').textContent='กรุณาเข้าสู่ระบบก่อนใช้งานกล้อง';
-      $('msg').hidden=false; $('msg').style.display='';
-      go('Acc'); return;
+  function startSession(){
+    if(!user || !profile){
+      $('hint').textContent = 'กรุณาเข้าสู่ระบบก่อนเริ่มนั่งสมาธิ';
+      go('Acc');
+      return;
     }
-    try{
-      stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});
-      video.srcObject=stream; await video.play();
-      $('msg').hidden=true; $('msg').style.display='none';
-      $('state').hidden=false; $('state').textContent='วางตัวให้เห็นทั้งตัว แล้วลุกนั่ง';
-      counting=true; count=0; $('big').textContent='0'; $('startBtn').textContent='หยุดนับ';
-      hist=[]; phase=0; downHold=0; upHold=0; cooldown=0;
-      loop();
-    }catch(e){
-      $('msg').textContent='ไม่สามารถเปิดกล้องได้: '+(e.message||e);
-      $('msg').hidden=false; $('msg').style.display='';
-    }
-  }
-
-  function stopCamera(){
-    counting=false;
-    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
-    video.srcObject=null;
-    $('msg').hidden=false; $('msg').style.display='';
-    $('msg').textContent='กดเริ่มลุกนั่ง แล้ววางมือถือให้เห็นตัวทั้งตัว';
-    $('state').hidden=true; $('startBtn').textContent='เริ่มลุกนั่ง';
-  }
-
-  function loop(){
-    if(!counting) return;
-    if(video.readyState>=2){
-      canvas.width=160; canvas.height=120;
-      ctx.drawImage(video,0,0,160,120);
-      const frame=ctx.getImageData(0,0,160,120);
-      let sumH=0,nH=0,sumB=0,nB=0,sumL=0,nL=0;
-      for(let y=5;y<35;y++) for(let x=40;x<120;x++){ const i=(y*160+x)*4; sumH+=(frame.data[i]+frame.data[i+1]+frame.data[i+2])/3; nH++; }
-      for(let y=35;y<80;y++) for(let x=30;x<130;x++){ const i=(y*160+x)*4; sumB+=(frame.data[i]+frame.data[i+1]+frame.data[i+2])/3; nB++; }
-      for(let y=80;y<115;y++) for(let x=40;x<120;x++){ const i=(y*160+x)*4; sumL+=(frame.data[i]+frame.data[i+1]+frame.data[i+2])/3; nL++; }
-      const brightness=(sumH/nH)*0.25+(sumB/nB)*0.5+(sumL/nL)*0.25;
-      hist.push(brightness); if(hist.length>HIST_LEN) hist.shift();
-
-      if(hist.length>=HIST_LEN && cooldown===0){
-        const recent=hist.slice(-5), older=hist.slice(0,5);
-        const avgR=recent.reduce((a,b)=>a+b,0)/recent.length;
-        const avgO=older.reduce((a,b)=>a+b,0)/older.length;
-        const delta=avgR-avgO;
-
-        if(phase===0){
-          if(delta<-18){ downHold++; if(downHold>=5){ phase=1; downHold=0; $('state').textContent='ลงแล้ว... ลุกขึ้น'; } }
-          else downHold=0;
-        } else if(phase===1){
-          if(delta>18){ upHold++; if(upHold>=5){
-            phase=0; upHold=0;
-            count++; data.today++;
-            saveLocal();
-            $('big').textContent=count;
-            $('big').classList.remove('pop'); void $('big').offsetWidth; $('big').classList.add('pop');
-            $('state').textContent='นับแล้ว!';
-            cooldown=40;
-            pushScore();
-          }}
-          else upHold=0;
-        }
+    running = true;
+    startTs = Date.now();
+    lastSavedMin = 0;
+    $('startBtn').textContent = 'หยุดนั่งสมาธิ';
+    $('status').textContent = 'กำลังนั่งสมาธิ...';
+    $('status').className = 'status-pill run';
+    $('breath').classList.add('run');
+    $('hint').innerHTML = 'หลับตา หายใจเข้า-ออกช้า ๆ<br>โฟกัสที่ลมหายใจ';
+    $('resetBtn').hidden = false;
+    tickTimer = setInterval(()=>{
+      updateDisplay();
+      const totalMs = elapsedMs + (Date.now() - startTs);
+      const mins = Math.floor(totalMs / 60000);
+      if(mins > lastSavedMin){
+        const add = mins - lastSavedMin;
+        lastSavedMin = mins;
+        addMinutes(add);
       }
-      if(cooldown>0) cooldown--;
-    }
-    requestAnimationFrame(loop);
+    }, 250);
   }
 
-  $('startBtn').onclick=()=>{ if(counting) stopCamera(); else startCamera(); };
+  async function stopSession(skipSave){
+    if(!running) return;
+    running = false;
+    elapsedMs += Date.now() - startTs;
+    clearInterval(tickTimer);
+    tickTimer = null;
+    $('startBtn').textContent = 'เริ่มนั่งสมาธิ';
+    $('status').textContent = 'หยุดแล้ว';
+    $('status').className = 'status-pill idle';
+    $('breath').classList.remove('run');
+    $('hint').innerHTML = 'ดีมาก! พักแล้วเริ่มรอบใหม่ได้เมื่อพร้อม';
+    updateDisplay();
 
-  async function pushScore(){
-    if(!user||!profile) return;
+    if(!skipSave){
+      const totalMs = elapsedMs;
+      const fullMins = Math.floor(totalMs / 60000);
+      const remainSec = Math.floor((totalMs % 60000) / 1000);
+      let add = fullMins - lastSavedMin;
+      if(remainSec >= 10) add += 1;
+      if(add > 0) await addMinutes(add);
+      lastSavedMin = fullMins + (remainSec >= 10 ? 1 : 0);
+    }
+  }
+
+  function resetSession(){
+    if(running) stopSession(true);
+    elapsedMs = 0;
+    lastSavedMin = 0;
+    updateDisplay();
+    $('status').textContent = 'พร้อมเริ่ม';
+    $('status').className = 'status-pill idle';
+    $('hint').innerHTML = 'นั่งหลังตรง หลับตา หายใจเข้า-ออกลึก ๆ<br>กดเริ่มเมื่อพร้อม';
+    $('resetBtn').hidden = true;
+  }
+
+  async function addMinutes(mins){
+    if(!user || !profile || mins <= 0) return;
+    data.today = (data.today || 0) + mins;
+    data.total = (data.total || 0) + mins;
+    saveLocal();
+    renderHome();
     try{
       const { data: cur } = await sb.from('profiles').select('total_situps').eq('id', user.id).single();
-      const next = (cur && cur.total_situps ? cur.total_situps : 0) + 1;
+      const next = (cur && cur.total_situps ? cur.total_situps : 0) + mins;
       await sb.from('profiles').update({
         total_situps: next,
         updated_at: new Date().toISOString()
       }).eq('id', user.id);
       data.total = next;
-      if (profile) profile.total_situps = next;
+      if(profile) profile.total_situps = next;
       saveLocal();
       renderHome();
-      await sb.from('situp_records').insert({ user_id: user.id, count: 1 });
+      await sb.from('situp_records').insert({ user_id: user.id, count: mins });
     }catch(e){ console.warn(e); }
   }
 
-  function renderHome(){ $('today').textContent=data.today||0; $('total').textContent=data.total||0; }
+  $('startBtn').onclick = ()=>{
+    if(running) stopSession(false);
+    else startSession();
+  };
+  $('resetBtn').onclick = resetSession;
 
-  loadLocal(); renderHome();
-  refreshUser().then(()=>{ sb.auth.onAuthStateChange(()=>refreshUser()); });
+  function renderHome(){
+    $('today').textContent = Math.round(data.today || 0);
+    $('total').textContent = Math.round(data.total || 0);
+  }
+
+  window.addEventListener('beforeunload', ()=>{
+    if(running){
+      const totalMs = elapsedMs + (Date.now() - startTs);
+      const mins = Math.floor(totalMs / 60000);
+      if(mins > lastSavedMin){
+        data.today = (data.today||0) + (mins - lastSavedMin);
+        data.total = (data.total||0) + (mins - lastSavedMin);
+        saveLocal();
+      }
+    }
+  });
+
+  loadLocal();
+  renderHome();
+  updateDisplay();
+  refreshUser().then(()=>{
+    sb.auth.onAuthStateChange(()=> refreshUser());
+  });
   go('Home');
 })();
 </script>
