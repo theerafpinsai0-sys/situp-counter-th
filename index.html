@@ -106,9 +106,8 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
         <button class="sm on" id="tLogin">เข้าสู่ระบบ</button>
         <button class="sm" id="tReg">สมัครสมาชิก</button>
       </div>
-      <input type="email" id="au" placeholder="อีเมล" autocomplete="email">
+      <input type="text" id="au" placeholder="ชื่อผู้ใช้ (3-16 ตัวอักษร)" maxlength="16" autocomplete="username">
       <input type="password" id="ap" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)" autocomplete="current-password">
-      <input type="text" id="uname" placeholder="ชื่อผู้ใช้ (3-16 ตัวอักษร)" maxlength="16" hidden>
       <select id="ac" hidden></select>
       <div class="err" id="aMsg" role="alert"></div>
       <button class="pill go" id="aGo">เข้าสู่ระบบ</button>
@@ -134,12 +133,10 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
 
 <script>
 (function(){
-  // ========== Supabase ==========
   const SUPABASE_URL = 'https://ogppjkdgggkzcvopzhsx.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ncHBqa2RnZ2dremN2b3B6aHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNTM0MDYsImV4cCI6MjEwNzcyOTQwNn0.T0768FKPsQ5Gu-EWY8lMZ5Odci3HseNYKkMGIwnZbWY';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // ========== Thai regions ==========
   const REG = {
     'ภาคเหนือ':'เชียงราย เชียงใหม่ น่าน พะเยา แพร่ แม่ฮ่องสอน ลำปาง ลำพูน อุตรดิตถ์',
     'ภาคกลาง':'กรุงเทพมหานคร กำแพงเพชร ชัยนาท นครนายก นครปฐม นครสวรรค์ นนทบุรี ปทุมธานี พระนครศรีอยุธยา พิจิตร พิษณุโลก เพชรบูรณ์ ลพบุรี สมุทรปราการ สมุทรสงคราม สมุทรสาคร สิงห์บุรี สุโขทัย สุพรรณบุรี สระบุรี อ่างทอง อุทัยธานี',
@@ -152,7 +149,6 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   const PR = {};
   RN.forEach(r => REG[r].split(' ').forEach(p => PR[p] = r));
 
-  // ========== Helpers ==========
   const $ = id => document.getElementById(id);
   let user = null;
   let profile = null;
@@ -180,7 +176,6 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
     try { localStorage.setItem('situp_v2', JSON.stringify(data)); } catch(e){}
   }
 
-  // ========== Tabs ==========
   function go(p) {
     ['Home','Rank','Acc'].forEach(n => {
       $('p'+n).hidden = n !== p;
@@ -191,7 +186,6 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   }
   ['Home','Rank','Acc'].forEach(n => $('n'+n).onclick = () => go(n));
 
-  // ========== Auth ==========
   function amsg(t) { $('aMsg').textContent = t || ''; }
 
   function fillProv(sel) {
@@ -217,32 +211,39 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   $('tLogin').onclick = () => {
     mode = 'login';
     $('tLogin').className = 'sm on'; $('tReg').className = 'sm';
-    $('uname').hidden = true; $('ac').hidden = true;
+    $('ac').hidden = true;
     $('aGo').textContent = 'เข้าสู่ระบบ';
     amsg('');
   };
   $('tReg').onclick = () => {
     mode = 'reg';
     $('tReg').className = 'sm on'; $('tLogin').className = 'sm';
-    $('uname').hidden = false; $('ac').hidden = false;
+    $('ac').hidden = false;
     $('aGo').textContent = 'สมัครสมาชิก';
     amsg('');
   };
 
+  function toEmail(username) {
+    return username.toLowerCase().replace(/[^a-z0-9]/g,'') + '@situp.app';
+  }
+
   $('aGo').onclick = async () => {
-    const email = $('au').value.trim();
+    const uname = $('au').value.trim();
     const pass = $('ap').value;
     amsg('');
-    if (!email || !pass) { amsg('กรอกอีเมลและรหัสผ่าน'); return; }
-    if (pass.length < 6) { amsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
+    if (!uname || uname.length < 3) { amsg('ชื่อผู้ใช้ต้องมี 3-16 ตัวอักษร'); return; }
+    if (!pass || pass.length < 6) { amsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
     $('aGo').disabled = true;
+
+    const email = toEmail(uname);
 
     try {
       if (mode === 'reg') {
-        const uname = $('uname').value.trim();
         const prov = $('ac').value;
-        if (!uname || uname.length < 3) { amsg('ชื่อผู้ใช้ต้องมี 3-16 ตัวอักษร'); return; }
         if (!prov) { amsg('เลือกจังหวัดของคุณก่อน'); return; }
+
+        const { data: exist } = await sb.from('profiles').select('id').ilike('username', uname).maybeSingle();
+        if (exist) { amsg('ชื่อผู้ใช้นี้มีคนใช้แล้ว'); return; }
 
         const { data: authData, error } = await sb.auth.signUp({ email, password: pass });
         if (error) throw error;
@@ -258,7 +259,7 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
           total_situps: data.total || 0,
           updated_at: new Date().toISOString()
         });
-        amsg('สมัครสำเร็จ! ตรวจสอบอีเมลเพื่อยืนยัน (ถ้ามี)');
+        amsg('สมัครสำเร็จ!');
       } else {
         const { error } = await sb.auth.signInWithPassword({ email, password: pass });
         if (error) throw error;
@@ -266,7 +267,10 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
       await refreshUser();
       $('ap').value = '';
     } catch (e) {
-      amsg(e.message || 'เกิดข้อผิดพลาด');
+      let msg = e.message || 'เกิดข้อผิดพลาด';
+      if (msg.includes('Invalid login')) msg = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+      if (msg.includes('already registered')) msg = 'ชื่อผู้ใช้นี้มีคนใช้แล้ว';
+      amsg(msg);
     } finally {
       $('aGo').disabled = false;
     }
@@ -309,7 +313,7 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
       $('authBox').hidden = true;
       $('profBox').hidden = false;
       $('pfName').textContent = profile.username || 'ผู้ใช้';
-      $('pfEmail').textContent = user.email || '';
+      $('pfEmail').textContent = profile.province || '';
       $('pfAv').textContent = (profile.username || '?')[0].toUpperCase();
       $('pc').value = profile.province || '';
     } else {
@@ -318,7 +322,6 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
     }
   }
 
-  // ========== Leaderboard ==========
   async function loadLeaderboard() {
     $('rsum').textContent = 'กำลังโหลด...';
     $('list').innerHTML = '';
@@ -359,7 +362,6 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
   $('rkr').onclick = () => { rankMode = 'region'; selRegion = profile?.region || 'ภาคตะวันออกเฉียงเหนือ'; $('rkr').className='on'; $('rkt').className=''; $('rkj').className=''; loadLeaderboard(); };
   $('rkj').onclick = () => { rankMode = 'prov'; selProv = profile?.province || 'อุบลราชธานี'; $('rkj').className='on'; $('rkt').className=''; $('rkr').className=''; loadLeaderboard(); };
 
-  // ========== Camera & Counter ==========
   let stream = null, counting = false, count = 0;
   const video = $('v'), canvas = $('ov'), ctx = canvas.getContext('2d');
 
@@ -470,7 +472,6 @@ nav .tab.on{background:linear-gradient(135deg,#E83FA8,#7A3CF0);color:#fff;box-sh
     $('total').textContent = data.total || 0;
   }
 
-  // ========== Init ==========
   loadLocal();
   renderHome();
   refreshUser().then(() => {
