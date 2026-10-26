@@ -304,7 +304,7 @@ nav .tab.on{background:var(--grad);color:#fff}
     if (user && profile) {
       $('authBox').hidden = true; $('profBox').hidden = false;
       $('pfName').textContent = profile.username || 'ผู้ใช้';
-      $('pfEmailEmail').textContent = profile.province || '';
+      $('pfEmail').textContent = profile.province || '';
       $('pfAv').textContent = (profile.username || '?')[0].toUpperCase();
       $('pc').value = profile.province || '';
     } else {
