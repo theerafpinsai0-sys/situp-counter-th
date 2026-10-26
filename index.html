@@ -1,1 +1,340 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>หลับตานั่งสมาธิ</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<style>
+:root{--bg:#0f0e17;--panel:#1a1830;--ink:#f5f2fb;--pink:#FF5FC0;--purple:#8B4FFF;--mint:#4FD1A5;--grad:linear-gradient(135deg,#FF5FC0,#8B4FFF);--shadow:0 10px 30px rgba(139,79,255,.25);--line:rgba(224,169,239,.15)}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:radial-gradient(700px 420px at 100% -8%,rgba(255,95,192,.18),transparent 60%),radial-gradient(700px 480px at -10% 40%,rgba(139,79,255,.15),transparent 60%),var(--bg);background-attachment:fixed;color:var(--ink);font-family:'Prompt',system-ui,sans-serif;padding-bottom:calc(108px + env(safe-area-inset-bottom,0px));min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:16px 18px}
+h2{font-weight:800;font-size:22px;text-align:center;margin:6px 0 14px}
+.pill{display:block;margin:12px auto 0;background:var(--grad);color:#fff;border:0;border-radius:99px;font:800 18px/1.2 'Prompt',sans-serif;padding:16px 28px;text-align:center;width:100%;max-width:100%;box-shadow:var(--shadow);cursor:pointer;min-height:56px}
+.pill:active{transform:scale(.96)}
+.cam-wrap{position:relative;margin:12px 0;border-radius:28px;overflow:hidden;background:var(--panel);aspect-ratio:4/3;max-height:36vh}
+video#v{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+canvas#ov{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);pointer-events:none}
+.cam-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;background:rgba(15,14,23,.75);font-size:15px;line-height:1.5;z-index:2}
+.timer{font-weight:800;font-size:56px;letter-spacing:2px;line-height:1.1;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin:8px 0 4px}
+.status-pill{display:table;margin:8px auto;padding:6px 16px;border-radius:99px;font-size:13px;font-weight:600}
+.status-pill.idle{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)}
+.status-pill.run{background:rgba(79,209,165,.2);color:var(--mint)}
+.status-pill.warn{background:rgba(255,95,192,.2);color:#FF5FC0}
+.hint{text-align:center;font-size:14px;opacity:.75;margin:10px 0 4px;line-height:1.5}
+.sub{display:grid;grid-template-columns:1fr 1fr;background:var(--panel);border-radius:22px;padding:14px 0;margin:16px 0 4px;text-align:center}
+.st b{display:block;font-size:28px;font-weight:800}.st span{font-size:13px;opacity:.65}.st+.st{border-left:1px solid var(--line)}
+.panel{background:var(--panel);border-radius:28px;padding:16px 8px 8px;box-shadow:var(--shadow)}
+.list{list-style:none;margin:0;padding:0;max-height:58vh;overflow-y:auto}
+.list li{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;min-height:64px;border-bottom:1px solid var(--line);padding:4px 10px 4px 14px}
+.list li.me{background:rgba(255,95,192,.2);border-radius:12px}.list li.empty{opacity:.45}
+.rk{font-size:26px;text-align:center;font-weight:800}
+.rk.r1,.rk.r2,.rk.r3{width:38px;height:38px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:18px}
+.rk.r1{background:linear-gradient(135deg,#FFE27A,#F5A100);color:#4a3000}
+.rk.r2{background:linear-gradient(135deg,#EEF2F7,#98A4B5);color:#2b3340}
+.rk.r3{background:linear-gradient(135deg,#F2B07A,#B5651D);color:#3b1d05}
+.who{display:flex;align-items:center;gap:10px;min-width:0;font-weight:800}
+.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cnt{font-weight:800;font-size:20px}.cnt::after{content:' นาที';font-size:12px;font-weight:400;opacity:.65}
+.av{width:40px;height:40px;border-radius:50%;flex:none;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;overflow:hidden}
+.av.lg{width:88px;height:88px;font-size:36px}
+select,input[type=text],input[type=password]{font:inherit;width:100%;color:var(--ink);background:rgba(0,0,0,.25);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:46px;margin-top:8px}
+.seg{display:flex;gap:8px;margin-bottom:12px;background:rgba(0,0,0,.2);padding:5px;border-radius:99px}
+.seg button{flex:1;border:0;background:none;color:var(--ink);font:800 14px 'Prompt',sans-serif;min-height:42px;border-radius:99px;cursor:pointer}
+.seg .on{background:var(--grad);color:#fff}
+.err{color:#ff7b9c;min-height:22px;font-size:14px;margin:8px 0 0}
+.go{width:100%;margin-top:10px}
+.who2{text-align:center}.who2 .av{margin:6px auto}
+.seg3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;background:var(--panel);padding:6px;border-radius:99px;margin-bottom:12px}
+.seg3 button{border:0;background:none;color:var(--ink);font:800 15px 'Prompt',sans-serif;min-height:46px;border-radius:99px;cursor:pointer}
+.seg3 button.on{background:var(--grad);color:#fff}
+.rsum{display:table;margin:0 auto 12px;padding:4px 16px;border-radius:99px;background:var(--line);font-size:14px}
+nav{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(calc(100% - 24px),496px);transform:translateX(-50%);display:grid;grid-template-columns:1fr 1fr 1fr;padding:6px;gap:4px;border-radius:30px;background:rgba(15,14,23,.85);backdrop-filter:blur(18px);border:1px solid var(--line);z-index:40}
+nav .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;padding:6px 4px;border-radius:24px;font:800 13px 'Prompt',sans-serif;color:var(--ink);border:0;background:transparent;cursor:pointer}
+nav .tab.on{background:var(--grad);color:#fff}
+.tab::before{font-size:20px}#nHome::before{content:'🧘'}#nRank::before{content:'🏆'}#nAcc::before{content:'👤'}
+.row{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.sm{font:800 14px 'Prompt',sans-serif;border:2px solid rgba(139,79,255,.5);background:none;color:var(--ink);border-radius:99px;padding:6px 16px;min-height:40px;cursor:pointer}
+.av-btn{position:relative;display:inline-block;cursor:pointer;border:0;background:none;padding:0}
+.av-btn .av{width:88px;height:88px;font-size:36px}
+.av-badge{position:absolute;right:0;bottom:0;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;border:2px solid var(--panel)}
+</style>
+</head>
+<body>
+<main>
+<section id="pHome">
+  <div class="pill" style="pointer-events:none;width:max-content;margin-left:auto;margin-right:auto;margin-bottom:8px">หลับตานั่งสมาธิ</div>
+  <div class="timer" id="timer">00:00</div>
+  <div class="status-pill idle" id="status">พร้อมเริ่ม</div>
+  <p class="hint" id="hint">นั่งหลังตรง วางกล้องให้เห็นใบหน้า<br>หลับตา → เวลานับ | ลืมตา → หยุดนับ</p>
+  <button class="pill" id="startBtn">เริ่มนั่งสมาธิ</button>
+  <div class="row"><button class="sm" id="resetBtn" hidden>รีเซ็ตรอบนี้</button></div>
+  <div class="cam-wrap">
+    <video id="v" playsinline muted></video>
+    <canvas id="ov"></canvas>
+    <div class="cam-msg" id="camMsg">กดปุ่มเริ่มด้านบน<br>แล้ววางมือถือให้เห็นใบหน้า<br>ระบบนับเวลาเฉพาะตอนหลับตา</div>
+  </div>
+  <div class="sub">
+    <div class="st"><b id="today">0</b><span>วันนี้ (นาที)</span></div>
+    <div class="st"><b id="total">0</b><span>รวมทั้งหมด (นาที)</span></div>
+  </div>
+</section>
+<section id="pRank" hidden>
+  <div class="seg3">
+    <button class="on" id="rkt">ประเทศไทย</button>
+    <button id="rkr">ภาค</button>
+    <button id="rkj">จังหวัด</button>
+  </div>
+  <div class="panel">
+    <h2 id="rt">อันดับประเทศไทย</h2>
+    <div class="rsum" id="rsum">กำลังโหลด...</div>
+    <ol class="list" id="list"></ol>
+  </div>
+</section>
+<section id="pAcc" hidden>
+  <h2>ตั้งค่าบัญชี</h2>
+  <div class="panel" style="padding:16px">
+    <div id="authBox">
+      <div class="seg">
+        <button class="sm on" id="tLogin">เข้าสู่ระบบ</button>
+        <button class="sm" id="tReg">สมัครสมาชิก</button>
+      </div>
+      <input type="text" id="au" placeholder="ชื่อผู้ใช้ (3-16 ตัวอักษร)" maxlength="16">
+      <input type="password" id="ap" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)">
+      <select id="ac" hidden></select>
+      <div class="err" id="aMsg"></div>
+      <button class="pill go" id="aGo">เข้าสู่ระบบ</button>
+    </div>
+    <div id="profBox" class="who2" hidden>
+      <button type="button" class="av-btn" id="avBtn" title="เปลี่ยนรูปโปรไฟล์">
+        <div id="pfAv" class="av lg">?</div>
+        <span class="av-badge">📷</span>
+      </button>
+      <input type="file" id="avFile" accept="image/*" hidden>
+      <div style="font-size:12px;opacity:.6;margin:4px 0 8px">แตะรูปเพื่อเปลี่ยน</div>
+      <div style="font-weight:800;font-size:22px;margin:4px 0" id="pfName"></div>
+      <div style="opacity:.7;margin-bottom:8px" id="pfEmail"></div>
+      <select id="pc"></select>
+      <div class="row" style="margin-top:16px"><button class="sm" id="outBtn">ออกจากระบบ</button></div>
+    </div>
+  </div>
+</section>
+</main>
+<nav>
+  <button class="tab on" id="nHome">หน้าหลัก</button>
+  <button class="tab" id="nRank">อันดับ</button>
+  <button class="tab" id="nAcc">ตั้งค่าบัญชี</button>
+</nav>
+<script>
+(function(){
+  const sb = supabase.createClient(
+    'https://ogppjkdgggkzcvopzhsx.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ncHBqa2RnZ2dremN2b3B6aHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNTM0MDYsImV4cCI6MjEwNzcyOTQwNn0.T0768FKPsQ5Gu-EWY8lMZ5Odci3HseNYKkMGIwnZbWY'
+  );
+  const REG = {
+    'ภาคเหนือ':'เชียงราย เชียงใหม่ น่าน พะเยา แพร่ แม่ฮ่องสอน ลำปาง ลำพูน อุตรดิตถ์',
+    'ภาคกลาง':'กรุงเทพมหานคร กำแพงเพชร ชัยนาท นครนายก นครปฐม นครสวรรค์ นนทบุรี ปทุมธานี พระนครศรีอยุธยา พิจิตร พิษณุโลก เพชรบูรณ์ ลพบุรี สมุทรปราการ สมุทรสงคราม สมุทรสาคร สิงห์บุรี สุโขทัย สุพรรณบุรี สระบุรี อ่างทอง อุทัยธานี',
+    'ภาคตะวันออกเฉียงเหนือ':'กาฬสินธุ์ ขอนแก่น ชัยภูมิ นครพนม นครราชสีมา บึงกาฬ บุรีรัมย์ มหาสารคาม มุกดาหาร ยโสธร ร้อยเอ็ด เลย สกลนคร สุรินทร์ ศรีสะเกษ หนองคาย หนองบัวลำภู อำนาจเจริญ อุดรธานี อุบลราชธานี',
+    'ภาคตะวันออก':'จันทบุรี ฉะเชิงเทรา ชลบุรี ตราด ปราจีนบุรี ระยอง สระแก้ว',
+    'ภาคตะวันตก':'กาญจนบุรี ตาก ประจวบคีรีขันธ์ เพชรบุรี ราชบุรี',
+    'ภาคใต้':'กระบี่ ชุมพร ตรัง นครศรีธรรมราช นราธิวาส ปัตตานี พังงา พัทลุง ภูเก็ต ระนอง สงขลา สตูล สุราษฎร์ธานี ยะลา'
+  };
+  const RN = Object.keys(REG);
+  const PR = {};
+  RN.forEach(function(r){ REG[r].split(' ').forEach(function(p){ PR[p]=r; }); });
+  function $(id){ return document.getElementById(id); }
+
+  var user = null, profile = null;
+  var data = { total: 0, today: 0 };
+  var rows = [], rankMode = 'th', selRegion = '', selProv = '';
+  var running = false, closedMs = 0, lastTick = 0, lastSavedMin = 0;
+  var eyesClosed = false, faceOk = false, stream = null, faceMesh = null, rafId = null;
+  var LEFT_EYE = [33, 160, 158, 133, 153, 144];
+  var RIGHT_EYE = [362, 385, 387, 263, 373, 380];
+  var EAR_THRESH = 0.18, closedFrames = 0, openFrames = 0;
+
+  function dkey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+  function loadLocal(){ try{ var s=localStorage.getItem('meditate_v2'); if(s) data=JSON.parse(s);}catch(e){} if(!data.days) data.days={}; data.today=data.days[dkey()]||0; }
+  function saveLocal(){ data.days=data.days||{}; data.days[dkey()]=data.today; try{ localStorage.setItem('meditate_v2', JSON.stringify(data)); }catch(e){} if(user){ try{ localStorage.setItem('meditate_today_'+user.id, String(data.today)); }catch(e){} } }
+  function fmt(ms){ var t=Math.floor(ms/1000); return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'); }
+
+  function go(p){ ['Home','Rank','Acc'].forEach(function(n){ $('p'+n).hidden=(n!==p); $('n'+n).className='tab'+(n===p?' on':''); }); if(p==='Acc') renderAcc(); if(p==='Rank') loadLeaderboard(); }
+  ['Home','Rank','Acc'].forEach(function(n){ $('n'+n).onclick=function(){ go(n); }; });
+
+  function amsg(t){ $('aMsg').textContent=t||''; }
+  function fillProv(sel){ sel.innerHTML=''; var ph=document.createElement('option'); ph.value=''; ph.textContent='เลือกจังหวัดของคุณ'; sel.appendChild(ph); RN.forEach(function(r){ var g=document.createElement('optgroup'); g.label=r; REG[r].split(' ').forEach(function(p){ var o=document.createElement('option'); o.value=p; o.textContent=p; g.appendChild(o); }); sel.appendChild(g); }); }
+  fillProv($('ac')); fillProv($('pc'));
+
+  var mode='login';
+  $('tLogin').onclick=function(){ mode='login'; $('tLogin').className='sm on'; $('tReg').className='sm'; $('ac').hidden=true; $('aGo').textContent='เข้าสู่ระบบ'; amsg(''); };
+  $('tReg').onclick=function(){ mode='reg'; $('tReg').className='sm on'; $('tLogin').className='sm'; $('ac').hidden=false; $('aGo').textContent='สมัครสมาชิก'; amsg(''); };
+  function toEmail(u){ return u.toLowerCase().replace(/[^a-z0-9]/g,'')+'@meditate.app'; }
+
+  $('aGo').onclick=async function(){
+    var uname=$('au').value.trim(), pass=$('ap').value; amsg('');
+    if(!uname||uname.length<3){ amsg('ชื่อผู้ใช้ต้องมี 3-16 ตัวอักษร'); return; }
+    if(!pass||pass.length<6){ amsg('รหัสผ่านต้องมีอย่างน้อย 6 ตัว'); return; }
+    $('aGo').disabled=true; var email=toEmail(uname);
+    try{
+      if(mode==='reg'){
+        var prov=$('ac').value; if(!prov){ amsg('เลือกจังหวัดของคุณก่อน'); return; }
+        var existRes=await sb.from('profiles').select('id').ilike('username',uname).maybeSingle();
+        if(existRes.data){ amsg('ชื่อผู้ใช้นี้มีคนใช้แล้ว'); return; }
+        var authRes=await sb.auth.signUp({email:email,password:pass}); if(authRes.error) throw authRes.error;
+        await sb.from('profiles').upsert({id:authRes.data.user.id,email:email,username:uname,province:prov,region:PR[prov]||'',total_situps:0,updated_at:new Date().toISOString()});
+        data.total=0; data.today=0; data.days={}; saveLocal(); amsg('สมัครสำเร็จ!');
+      } else {
+        var loginRes=await sb.auth.signInWithPassword({email:email,password:pass}); if(loginRes.error) throw loginRes.error;
+      }
+      await refreshUser(); $('ap').value='';
+    }catch(e){ var msg=e.message||'เกิดข้อผิดพลาด'; if(msg.indexOf('Invalid login')>=0) msg='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'; if(msg.indexOf('already registered')>=0) msg='ชื่อผู้ใช้นี้มีคนใช้แล้ว'; amsg(msg); }
+    finally{ $('aGo').disabled=false; }
+  };
+
+  $('outBtn').onclick=async function(){ if(running) stopSession(true); await sb.auth.signOut(); user=null; profile=null; data.total=0; data.today=0; renderHome(); renderAcc(); };
+  $('pc').onchange=async function(){ if(!user||!profile) return; var prov=$('pc').value; await sb.from('profiles').update({province:prov,region:PR[prov]||'',updated_at:new Date().toISOString()}).eq('id',user.id); profile.province=prov; profile.region=PR[prov]||''; };
+
+  async function refreshUser(){
+    var res=await sb.auth.getUser(); user=res.data.user;
+    if(user){ var pr=await sb.from('profiles').select('*').eq('id',user.id).single(); profile=pr.data;
+      if(profile){ data.total=profile.total_situps||0; try{ var t=localStorage.getItem('meditate_today_'+user.id); data.today=t?(parseFloat(t)||0):0; }catch(e){ data.today=0; } saveLocal(); renderHome(); }
+    } else profile=null;
+    renderAcc();
+  }
+  function setAvatarEl(el,url,letter){
+    if(!el) return;
+    if(url){ el.innerHTML='<img src="'+url+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'; el.style.background='transparent'; }
+    else { el.innerHTML=''; el.textContent=letter||'?'; el.style.background=''; }
+  }
+  function renderAcc(){
+    if(user&&profile){ $('authBox').hidden=true; $('profBox').hidden=false; $('pfName').textContent=profile.username||'ผู้ใช้'; $('pfEmail').textContent=profile.province||''; setAvatarEl($('pfAv'), profile.avatar_url, (profile.username||'?')[0].toUpperCase()); $('pc').value=profile.province||''; }
+    else { $('authBox').hidden=false; $('profBox').hidden=true; }
+  }
+
+  async function loadLeaderboard(){
+    $('rsum').textContent='กำลังโหลด...'; $('list').innerHTML='';
+    var q=sb.from('profiles').select('id,username,province,region,total_situps,avatar_url').order('total_situps',{ascending:false}).limit(100);
+    if(rankMode==='region'&&selRegion) q=q.eq('region',selRegion);
+    if(rankMode==='prov'&&selProv) q=q.eq('province',selProv);
+    var res=await q; if(res.error) return; rows=res.data||[]; renderRank();
+  }
+  function renderRank(){
+    var filtered=rows.filter(function(r){ return (r.total_situps||0)>0; });
+    var totalShow=Math.max(10, filtered.length);
+    $('rsum').textContent=filtered.length?('มีผู้เล่น '+filtered.length+' คน'):'ยังไม่มีผู้เล่น';
+    $('list').innerHTML='';
+    for(var i=0;i<totalShow;i++){
+      var r=filtered[i]; var li=document.createElement('li');
+      if(r&&user&&r.id===user.id) li.classList.add('me');
+      if(!r) li.classList.add('empty');
+      var rk=i===0?'r1':i===1?'r2':i===2?'r3':'';
+      if(r){
+        var avHtml=r.avatar_url?('<div class="av" style="padding:0;overflow:hidden"><img src="'+r.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'):('<div class="av">'+(r.username||'?')[0].toUpperCase()+'</div>');
+        li.innerHTML='<div class="rk '+rk+'">'+(i+1)+'</div><div class="who">'+avHtml+'<span>'+(r.username||'ไม่ระบุ')+'<br><small style="font-weight:400;opacity:.7">'+(r.province||'')+'</small></span></div><div class="cnt">'+Math.round(r.total_situps||0)+'</div>';
+      } else {
+        li.innerHTML='<div class="rk">'+(i+1)+'</div><div class="who"><div class="av" style="opacity:.3">?</div><span style="opacity:.4">ว่าง</span></div><div class="cnt" style="opacity:.3">-</div>';
+      }
+      $('list').appendChild(li);
+    }
+    $('rt').textContent=rankMode==='th'?'อันดับประเทศไทย':rankMode==='region'?'อันดับภาค':'อันดับจังหวัด';
+  }
+  $('rkt').onclick=function(){ rankMode='th'; selRegion=''; selProv=''; $('rkt').className='on'; $('rkr').className=''; $('rkj').className=''; loadLeaderboard(); };
+  $('rkr').onclick=function(){ rankMode='region'; selRegion=(profile&&profile.region)||'ภาคตะวันออกเฉียงเหนือ'; $('rkr').className='on'; $('rkt').className=''; $('rkj').className=''; loadLeaderboard(); };
+  $('rkj').onclick=function(){ rankMode='prov'; selProv=(profile&&profile.province)||'อุบลราชธานี'; $('rkj').className='on'; $('rkt').className=''; $('rkr').className=''; loadLeaderboard(); };
+
+  function dist(a,b){ var dx=a.x-b.x, dy=a.y-b.y; return Math.sqrt(dx*dx+dy*dy); }
+  function eyeAspectRatio(lm,idx){ var p1=lm[idx[0]],p2=lm[idx[1]],p3=lm[idx[2]],p4=lm[idx[3]],p5=lm[idx[4]],p6=lm[idx[5]]; var v1=dist(p2,p6),v2=dist(p3,p5),h=dist(p1,p4); if(h<1e-6) return 1; return (v1+v2)/(2*h); }
+
+  function onFaceResults(results){
+    var canvas=$('ov'), ctx=canvas.getContext('2d'), video=$('v');
+    if(canvas.width!==video.videoWidth){ canvas.width=video.videoWidth||640; canvas.height=video.videoHeight||480; }
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    faceOk=false; var closed=false;
+    if(results.multiFaceLandmarks&&results.multiFaceLandmarks.length>0){
+      faceOk=true; var lm=results.multiFaceLandmarks[0];
+      var ear=(eyeAspectRatio(lm,LEFT_EYE)+eyeAspectRatio(lm,RIGHT_EYE))/2;
+      if(ear<EAR_THRESH){ closedFrames++; openFrames=0; } else { openFrames++; closedFrames=0; }
+      if(closedFrames>=3) closed=true; if(openFrames>=3) closed=false; if(closedFrames<3&&openFrames<3) closed=eyesClosed;
+      ctx.fillStyle=closed?'rgba(79,209,165,0.9)':'rgba(255,95,192,0.9)'; ctx.beginPath(); ctx.arc(canvas.width-30,30,12,0,Math.PI*2); ctx.fill();
+    }
+    eyesClosed=closed; updateSessionTick();
+  }
+  function updateSessionTick(){
+    if(!running) return; var now=Date.now(), dt=now-lastTick; lastTick=now;
+    if(faceOk&&eyesClosed){ closedMs+=dt; $('status').textContent='หลับตาแล้ว · กำลังนับเวลา'; $('status').className='status-pill run'; $('camMsg').style.display='none'; }
+    else if(!faceOk){ $('status').textContent='ไม่เจอใบหน้า · วางกล้องให้เห็นหน้า'; $('status').className='status-pill warn'; $('camMsg').style.display=''; $('camMsg').innerHTML='ไม่เจอใบหน้า<br>เลื่อนมือถือให้เห็นหน้าชัด ๆ'; }
+    else { $('status').textContent='ลืมตาอยู่ · ยังไม่นับเวลา'; $('status').className='status-pill warn'; $('camMsg').style.display=''; $('camMsg').innerHTML='หลับตาเพื่อให้นับเวลา<br>ลืมตา = หยุดนับชั่วคราว'; }
+    $('timer').textContent=fmt(closedMs);
+    var mins=Math.floor(closedMs/60000); if(mins>lastSavedMin){ var add=mins-lastSavedMin; lastSavedMin=mins; addMinutes(add); }
+  }
+  async function initFaceMesh(){ if(faceMesh) return; faceMesh=new FaceMesh({ locateFile:function(file){ return 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/'+file; } }); faceMesh.setOptions({maxNumFaces:1,refineLandmarks:true,minDetectionConfidence:0.5,minTrackingConfidence:0.5}); faceMesh.onResults(onFaceResults); }
+  async function startCamera(){
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
+    var video=$('v'); video.srcObject=stream; await video.play(); await initFaceMesh();
+    async function process(){ if(!running) return; if(video.readyState>=2) await faceMesh.send({image:video}); rafId=requestAnimationFrame(process); }
+    process();
+  }
+  function stopCamera(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream=null; } $('v').srcObject=null; var ctx=$('ov').getContext('2d'); ctx.clearRect(0,0,$('ov').width,$('ov').height); }
+
+  async function startSession(){
+    if(!user||!profile){ $('hint').textContent='กรุณาเข้าสู่ระบบก่อนเริ่มนั่งสมาธิ'; go('Acc'); return; }
+    try{
+      $('camMsg').style.display=''; $('camMsg').innerHTML='กำลังเปิดกล้อง...';
+      running=true; closedMs=0; lastSavedMin=0; lastTick=Date.now(); eyesClosed=false; faceOk=false;
+      $('startBtn').textContent='หยุดนั่งสมาธิ'; $('status').textContent='กำลังเริ่ม...'; $('status').className='status-pill run'; $('resetBtn').hidden=false; $('timer').textContent='00:00';
+      await startCamera(); $('camMsg').style.display='none';
+    }catch(e){ running=false; $('camMsg').innerHTML='เปิดกล้องไม่ได้: '+(e.message||e)+'<br>อนุญาตการใช้กล้องแล้วลองใหม่'; $('camMsg').style.display=''; $('startBtn').textContent='เริ่มนั่งสมาธิ'; $('status').textContent='พร้อมเริ่ม'; $('status').className='status-pill idle'; }
+  }
+  async function stopSession(skipSave){
+    if(!running) return; running=false; stopCamera();
+    $('startBtn').textContent='เริ่มนั่งสมาธิ'; $('status').textContent='หยุดแล้ว'; $('status').className='status-pill idle';
+    $('camMsg').style.display=''; $('camMsg').innerHTML='กดปุ่มเริ่มด้านบน<br>แล้ววางมือถือให้เห็นใบหน้า<br>ระบบนับเวลาเฉพาะตอนหลับตา';
+    $('hint').innerHTML='ดีมาก! พักแล้วเริ่มรอบใหม่ได้เมื่อพร้อม';
+    if(!skipSave){ var fullMins=Math.floor(closedMs/60000); var remainSec=Math.floor((closedMs%60000)/1000); var add=fullMins-lastSavedMin; if(remainSec>=10) add+=1; if(add>0) await addMinutes(add); }
+  }
+  function resetSession(){ if(running) stopSession(true); closedMs=0; lastSavedMin=0; $('timer').textContent='00:00'; $('status').textContent='พร้อมเริ่ม'; $('status').className='status-pill idle'; $('hint').innerHTML='นั่งหลังตรง วางกล้องให้เห็นใบหน้า<br>หลับตา → เวลานับ | ลืมตา → หยุดนับ'; $('resetBtn').hidden=true; }
+  async function addMinutes(mins){
+    if(!user||!profile||mins<=0) return;
+    data.today=(data.today||0)+mins; data.total=(data.total||0)+mins; saveLocal(); renderHome();
+    try{ var cur=await sb.from('profiles').select('total_situps').eq('id',user.id).single(); var next=((cur.data&&cur.data.total_situps)?cur.data.total_situps:0)+mins;
+      await sb.from('profiles').update({total_situps:next,updated_at:new Date().toISOString()}).eq('id',user.id);
+      data.total=next; if(profile) profile.total_situps=next; saveLocal(); renderHome();
+      await sb.from('situp_records').insert({user_id:user.id,count:mins});
+    }catch(e){ console.warn(e); }
+  }
+  $('startBtn').onclick=function(){ if(running) stopSession(false); else startSession(); };
+  $('resetBtn').onclick=resetSession;
+  function renderHome(){ $('today').textContent=Math.round(data.today||0); $('total').textContent=Math.round(data.total||0); }
+
+  // Avatar upload
+  $('avBtn').onclick=function(){ $('avFile').click(); };
+  $('avFile').onchange=async function(){
+    var file=this.files&&this.files[0]; if(!file||!user) return;
+    if(file.size>2*1024*1024){ alert('ไฟล์ใหญ่เกิน 2MB'); return; }
+    try{
+      $('pfAv').textContent='...';
+      var ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+      if(['jpg','jpeg','png','webp','gif'].indexOf(ext)<0) ext='jpg';
+      var path=user.id+'/avatar.'+ext;
+      var up=await sb.storage.from('avatars').upload(path,file,{upsert:true,contentType:file.type});
+      if(up.error) throw up.error;
+      var pub=sb.storage.from('avatars').getPublicUrl(path);
+      var url=pub.data.publicUrl+'?t='+Date.now();
+      await sb.from('profiles').update({avatar_url:url,updated_at:new Date().toISOString()}).eq('id',user.id);
+      profile.avatar_url=url;
+      setAvatarEl($('pfAv'),url,(profile.username||'?')[0].toUpperCase());
+    }catch(e){ alert('อัปโหลดไม่สำเร็จ: '+(e.message||e)); renderAcc(); }
+    this.value='';
+  };
+
+  loadLocal(); renderHome();
+  refreshUser().then(function(){ sb.auth.onAuthStateChange(function(){ refreshUser(); }); });
+  go('Home');
+})();
+</script>
+</body>
+</html>
