@@ -34,8 +34,8 @@ canvas#ov{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 
 .st b{display:block;font-size:28px;font-weight:800}.st span{font-size:13px;opacity:.65}.st+.st{border-left:1px solid var(--line)}
 .panel{background:var(--panel);border-radius:28px;padding:16px 8px 8px;box-shadow:var(--shadow)}
 .list{list-style:none;margin:0;padding:0;max-height:58vh;overflow-y:auto}
-.list li{display:grid;grid-template-columns:58px 1fr auto;align-items:center;gap:8px;min-height:64px;border-bottom:1px solid var(--line);padding:4px 10px 4px 14px;position:relative}
-.list li.me{background:rgba(255,95,192,.2);border-radius:12px}.list li.empty{opacity:.45}
+.list li{display:grid;grid-template-columns:58px 1fr auto;align-items:center;gap:8px;min-height:64px;border-bottom:1px solid var(--line);padding:4px 10px 4px 14px;position:relative;cursor:pointer}
+.list li.me{background:rgba(255,95,192,.2);border-radius:12px}.list li.empty{opacity:.45;cursor:default}
 .rk{font-size:26px;text-align:center;font-weight:800}
 .rk.r1,.rk.r2,.rk.r3{width:38px;height:38px;border-radius:50%;margin:auto;display:flex;align-items:center;justify-content:center;font-size:18px}
 .rk.r1{background:linear-gradient(135deg,#FFE27A,#F5A100);color:#4a3000}
@@ -52,23 +52,34 @@ canvas#ov{position:absolute;inset:3px;width:calc(100% - 6px);height:calc(100% - 
 .av.lg.ring{padding:4px;box-shadow:0 0 20px rgba(255,95,192,.6),0 0 40px rgba(139,79,255,.35)}
 .av.lg.ring::after{inset:4px}
 .list .av.ring{width:46px;height:46px}
-.fire-rk{position:relative;width:52px;height:52px;display:flex;align-items:center;justify-content:center}
-.fire-rk .rk{position:relative;z-index:3;width:40px;height:40px}
-.flame{position:absolute;left:50%;bottom:8px;width:28px;height:40px;transform:translateX(-50%);pointer-events:none;z-index:1}
-.flame span{position:absolute;bottom:0;left:50%;width:18px;height:28px;border-radius:50% 50% 20% 20%;transform:translateX(-50%);
-  background:radial-gradient(circle at 50% 80%,#fff6a0 0%,#ffcc33 25%,#ff6a00 55%,#ff2d00 80%,transparent 100%);
-  filter:blur(.4px);animation:flameUp 0.35s ease-in-out infinite alternate;opacity:.95;
-  box-shadow:0 0 12px rgba(255,100,0,.8),0 0 24px rgba(255,60,0,.5)}
-.flame span:nth-child(1){width:22px;height:34px;animation-duration:.4s}
-.flame span:nth-child(2){width:14px;height:26px;left:35%;animation-duration:.28s;animation-delay:.05s;opacity:.85}
-.flame span:nth-child(3){width:14px;height:24px;left:65%;animation-duration:.32s;animation-delay:.08s;opacity:.85}
-.flame span:nth-child(4){width:10px;height:18px;left:50%;bottom:18px;background:radial-gradient(circle at 50% 100%,#fff 0%,#ffe566 40%,transparent 100%);animation-duration:.22s;filter:blur(1px);opacity:.9}
-.fire-rk.r2 .flame span{background:radial-gradient(circle at 50% 80%,#f5f5f5 0%,#c8d0dc 25%,#8a95a5 55%,#5a6570 80%,transparent 100%);box-shadow:0 0 12px rgba(180,190,200,.7),0 0 20px rgba(140,150,160,.4)}
-.fire-rk.r2 .flame span:nth-child(4){background:radial-gradient(circle at 50% 100%,#fff 0%,#dde3ea 40%,transparent 100%)}
-.fire-rk.r3 .flame span{background:radial-gradient(circle at 50% 80%,#ffe0b0 0%,#e8a050 25%,#c06a20 55%,#8a4010 80%,transparent 100%);box-shadow:0 0 12px rgba(200,120,40,.7),0 0 20px rgba(160,80,20,.4)}
-.fire-rk.r3 .flame span:nth-child(4){background:radial-gradient(circle at 50% 100%,#fff8e8 0%,#ffd090 40%,transparent 100%)}
-@keyframes flameUp{0%{transform:translateX(-50%) scaleY(1) scaleX(1) rotate(-2deg);opacity:.9}100%{transform:translateX(-50%) scaleY(1.15) scaleX(.92) rotate(2deg);opacity:1}}
-select,input[type=text],input[type=password]{font:inherit;width:100%;color:var(--ink);background:rgba(0,0,0,.25);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:46px;margin-top:8px}
+.fire-rk{position:relative;width:56px;height:56px;display:flex;align-items:center;justify-content:center}
+.fire-rk .rk{position:relative;z-index:5;width:42px;height:42px;box-shadow:0 0 12px rgba(255,140,0,.6)}
+.fire-rk.r1 .rk{box-shadow:0 0 16px rgba(255,180,0,.85)}
+.fire-rk.r2 .rk{box-shadow:0 0 14px rgba(180,190,200,.7)}
+.fire-rk.r3 .rk{box-shadow:0 0 14px rgba(200,120,40,.7)}
+.flame-ring{position:absolute;inset:-6px;border-radius:50%;pointer-events:none;z-index:1}
+.flame-ring i{position:absolute;width:12px;height:20px;border-radius:50% 50% 20% 20%;background:radial-gradient(circle at 50% 80%,#fff6a0 0%,#ffcc33 30%,#ff6a00 60%,#ff2d00 100%);filter:blur(.3px);animation:flameDance .4s ease-in-out infinite alternate;box-shadow:0 0 8px rgba(255,100,0,.9);transform-origin:center bottom}
+.flame-ring i:nth-child(1){top:-4px;left:50%;margin-left:-6px;animation-delay:0s}
+.flame-ring i:nth-child(2){top:2px;right:0;transform:rotate(45deg);animation-delay:.05s}
+.flame-ring i:nth-child(3){bottom:2px;right:0;transform:rotate(90deg);animation-delay:.1s}
+.flame-ring i:nth-child(4){bottom:-4px;left:50%;margin-left:-6px;transform:rotate(180deg);animation-delay:.15s}
+.flame-ring i:nth-child(5){bottom:2px;left:0;transform:rotate(225deg);animation-delay:.2s}
+.flame-ring i:nth-child(6){top:2px;left:0;transform:rotate(315deg);animation-delay:.25s}
+.flame-ring i:nth-child(7){top:-2px;left:22%;width:10px;height:16px;animation-delay:.08s}
+.flame-ring i:nth-child(8){top:-2px;right:22%;width:10px;height:16px;animation-delay:.12s}
+.fire-rk.r2 .flame-ring i{background:radial-gradient(circle at 50% 80%,#fff 0%,#c8d0dc 30%,#8a95a5 60%,#5a6570 100%);box-shadow:0 0 8px rgba(180,190,200,.8)}
+.fire-rk.r3 .flame-ring i{background:radial-gradient(circle at 50% 80%,#ffe0b0 0%,#e8a050 30%,#c06a20 60%,#8a4010 100%);box-shadow:0 0 8px rgba(200,120,40,.8)}
+@keyframes flameDance{0%{transform:scaleY(1) scaleX(1);opacity:.85}100%{transform:scaleY(1.25) scaleX(.9);opacity:1}}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.modal{background:var(--panel);border-radius:28px;padding:24px 20px;max-width:360px;width:100%;box-shadow:var(--shadow);text-align:center;position:relative}
+.modal .close{position:absolute;top:12px;right:14px;border:0;background:rgba(255,255,255,.1);color:#fff;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer}
+.modal .av{margin:0 auto 12px}
+.modal .uname{font-weight:800;font-size:22px;margin:4px 0}
+.modal .meta{opacity:.75;font-size:14px;margin:4px 0 10px;line-height:1.5}
+.modal .bio{background:rgba(0,0,0,.25);border-radius:16px;padding:12px;font-size:14px;line-height:1.5;min-height:40px;margin:8px 0 12px;text-align:left}
+.modal .mins{font-weight:800;font-size:28px;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+select,input[type=text],input[type=password],textarea{font:inherit;width:100%;color:var(--ink);background:rgba(0,0,0,.25);border:2px solid var(--line);border-radius:16px;padding:10px 12px;min-height:46px;margin-top:8px}
+textarea{min-height:72px;resize:vertical}
 .seg{display:flex;gap:8px;margin-bottom:12px;background:rgba(0,0,0,.2);padding:5px;border-radius:99px}
 .seg button{flex:1;border:0;background:none;color:var(--ink);font:800 14px 'Prompt',sans-serif;min-height:42px;border-radius:99px;cursor:pointer}
 .seg .on{background:var(--grad);color:#fff}
@@ -144,10 +155,22 @@ nav .tab.on{background:var(--grad);color:#fff}
       <div style="font-weight:800;font-size:22px;margin:4px 0" id="pfName"></div>
       <div style="opacity:.7;margin-bottom:8px" id="pfEmail"></div>
       <select id="pc"></select>
+      <textarea id="bioInput" maxlength="120" placeholder="คำแนะนำตัว (สูงสุด 120 ตัวอักษร)"></textarea>
+      <button class="sm" id="bioSave" style="margin-top:8px">บันทึกคำแนะนำตัว</button>
       <div class="row" style="margin-top:16px"><button class="sm" id="outBtn">ออกจากระบบ</button></div>
     </div>
   </div>
 </section>
+<div id="profModal" class="modal-bg" hidden>
+  <div class="modal">
+    <button class="close" id="pmClose">×</button>
+    <div id="pmAv" class="av lg ring">?</div>
+    <div class="uname" id="pmName">-</div>
+    <div class="meta" id="pmMeta">-</div>
+    <div class="bio" id="pmBio">ยังไม่มีคำแนะนำตัว</div>
+    <div class="mins" id="pmMins">0 นาที</div>
+  </div>
+</div>
 </main>
 <nav>
   <button class="tab on" id="nHome">หน้าหลัก</button>
@@ -210,7 +233,7 @@ nav .tab.on{background:var(--grad);color:#fff}
         var existRes=await sb.from('profiles').select('id').ilike('username',uname).maybeSingle();
         if(existRes.data){ amsg('ชื่อผู้ใช้นี้มีคนใช้แล้ว'); return; }
         var authRes=await sb.auth.signUp({email:email,password:pass}); if(authRes.error) throw authRes.error;
-        await sb.from('profiles').upsert({id:authRes.data.user.id,email:email,username:uname,province:prov,region:PR[prov]||'',total_situps:0,updated_at:new Date().toISOString()});
+        await sb.from('profiles').upsert({id:authRes.data.user.id,email:email,username:uname,province:prov,region:PR[prov]||'',total_situps:0,bio:'',updated_at:new Date().toISOString()});
         data.total=0; data.today=0; data.days={}; saveLocal(); amsg('สมัครสำเร็จ!');
       } else {
         var look=await sb.from('profiles').select('email').ilike('username',uname).maybeSingle();
@@ -232,7 +255,7 @@ nav .tab.on{background:var(--grad);color:#fff}
   };
 
   $('outBtn').onclick=async function(){ if(running) stopSession(true); await sb.auth.signOut(); user=null; profile=null; data.total=0; data.today=0; renderHome(); renderAcc(); };
-  $('pc').onchange=async function(){ if(!user||!profile) return; var prov=$('pc').value; await sb.from('profiles').update({province:prov,region:PR[prov]||'',updated_at:new Date().toISOString()}).eq('id',user.id); profile.province=prov; profile.region=PR[prov]||''; };
+  $('pc').onchange=async function(){ if(!user||!profile) return; var prov=$('pc').value; await sb.from('profiles').update({province:prov,region:PR[prov]||'',updated_at:new Date().toISOString()}).eq('id',user.id); profile.province=prov; profile.region=PR[prov]||''; renderAcc(); };
 
   async function refreshUser(){
     var res=await sb.auth.getUser(); user=res.data.user;
@@ -247,14 +270,10 @@ nav .tab.on{background:var(--grad);color:#fff}
     if(url){ el.innerHTML='<img src="'+url+'" alt="">'; el.style.background='transparent'; }
     else { el.innerHTML='<span class="av-letter">'+(letter||'?')+'</span>'; el.style.background='transparent'; }
   }
-  function renderAcc(){
-    if(user&&profile){ $('authBox').hidden=true; $('profBox').hidden=false; $('pfName').textContent=profile.username||'ผู้ใช้'; $('pfEmail').textContent=profile.province||''; setAvatarEl($('pfAv'), profile.avatar_url, (profile.username||'?')[0].toUpperCase()); $('pfAv').classList.add('ring','lg'); $('pc').value=profile.province||''; }
-    else { $('authBox').hidden=false; $('profBox').hidden=true; }
-  }
 
   async function loadLeaderboard(){
     $('rsum').textContent='กำลังโหลด...'; $('list').innerHTML='';
-    var q=sb.from('profiles').select('id,username,province,region,total_situps,avatar_url').order('total_situps',{ascending:false}).limit(100);
+    var q=sb.from('profiles').select('id,username,province,region,total_situps,avatar_url,bio').order('total_situps',{ascending:false}).limit(100);
     if(rankMode==='region'&&selRegion) q=q.eq('region',selRegion);
     if(rankMode==='prov'&&selProv) q=q.eq('province',selProv);
     var res=await q; if(res.error) return; rows=res.data||[]; renderRank();
@@ -273,12 +292,13 @@ nav .tab.on{background:var(--grad);color:#fff}
         var letter=(r.username||'?')[0].toUpperCase();
         var avInner=r.avatar_url?('<img src="'+r.avatar_url+'" alt="">'):('<span class="av-letter">'+letter+'</span>');
         var avHtml='<div class="av ring">'+avInner+'</div>';
-        var flame=(i<3)?'<div class="flame"><span></span><span></span><span></span><span></span></div>':'';
+        var flame=(i<3)?'<div class="flame-ring"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>':'';
         var rkHtml=(i<3)?('<div class="fire-rk '+(i===0?'r1':i===1?'r2':'r3')+'">'+flame+'<div class="rk '+rk+'">'+(i+1)+'</div></div>'):('<div class="rk">'+(i+1)+'</div>');
         li.innerHTML=rkHtml+'<div class="who">'+avHtml+'<span>'+(r.username||'ไม่ระบุ')+'<br><small style="font-weight:400;opacity:.7">'+(r.province||'')+'</small></span></div><div class="cnt">'+Math.round(r.total_situps||0)+'</div>';
+        li.onclick=function(){ showProfile(r); };
       } else {
         var emptyAv='<div class="av ring" style="opacity:.45"><span class="av-letter">-</span></div>';
-        var flame=(i<3)?'<div class="flame"><span></span><span></span><span></span><span></span></div>':'';
+        var flame=(i<3)?'<div class="flame-ring"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>':'';
         var rkHtml=(i<3)?('<div class="fire-rk '+(i===0?'r1':i===1?'r2':'r3')+'">'+flame+'<div class="rk '+rk+'">'+(i+1)+'</div></div>'):('<div class="rk">'+(i+1)+'</div>');
         li.innerHTML=rkHtml+'<div class="who">'+emptyAv+'<span style="opacity:.45">ว่าง<br><small>รอคุณมาเป็นอันดับนี้</small></span></div><div class="cnt" style="opacity:.3">-</div>';
       }
@@ -375,6 +395,42 @@ nav .tab.on{background:var(--grad);color:#fff}
     }catch(e){ alert('อัปโหลดไม่สำเร็จ: '+(e.message||e)); renderAcc(); }
     this.value='';
   };
+
+  function showProfile(r){
+    if(!r) return;
+    setAvatarEl($('pmAv'), r.avatar_url, (r.username||'?')[0].toUpperCase());
+    $('pmAv').classList.add('ring','lg');
+    $('pmName').textContent = r.username || 'ไม่ระบุ';
+    var reg = r.region || '';
+    var prov = r.province || '';
+    $('pmMeta').textContent = (prov ? prov : '') + (reg ? ' · ' + reg : '');
+    $('pmBio').textContent = (r.bio && r.bio.trim()) ? r.bio.trim() : 'ยังไม่มีคำแนะนำตัว';
+    $('pmMins').textContent = Math.round(r.total_situps||0) + ' นาที';
+    $('profModal').hidden = false;
+  }
+  $('pmClose').onclick = function(){ $('profModal').hidden = true; };
+  $('profModal').onclick = function(e){ if(e.target===$('profModal')) $('profModal').hidden = true; };
+
+  function renderAcc(){
+    if(user&&profile){
+      $('authBox').hidden=true; $('profBox').hidden=false;
+      $('pfName').textContent=profile.username||'ผู้ใช้';
+      $('pfEmail').textContent=(profile.province||'') + (profile.region ? ' · '+profile.region : '');
+      setAvatarEl($('pfAv'), profile.avatar_url, (profile.username||'?')[0].toUpperCase());
+      $('pfAv').classList.add('ring','lg');
+      $('pc').value=profile.province||'';
+      if($('bioInput')) $('bioInput').value = profile.bio || '';
+    } else { $('authBox').hidden=false; $('profBox').hidden=true; }
+  }
+  if($('bioSave')){
+    $('bioSave').onclick = async function(){
+      if(!user||!profile) return;
+      var b = ($('bioInput').value||'').trim().slice(0,120);
+      await sb.from('profiles').update({bio:b, updated_at:new Date().toISOString()}).eq('id', user.id);
+      profile.bio = b;
+      alert('บันทึกแล้ว');
+    };
+  }
 
   loadLocal(); renderHome();
   refreshUser().then(function(){ sb.auth.onAuthStateChange(function(){ refreshUser(); }); });
