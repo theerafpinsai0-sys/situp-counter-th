@@ -154,7 +154,7 @@ nav .tab.on{background:var(--grad);color:#fff}
   var eyesClosed = false, faceOk = false, stream = null, faceMesh = null, rafId = null;
   var LEFT_EYE = [33, 160, 158, 133, 153, 144];
   var RIGHT_EYE = [362, 385, 387, 263, 373, 380];
-  var EAR_THRESH = 0.18, closedFrames = 0, openFrames = 0;
+  var EAR_THRESH = 0.16, closedFrames = 0, openFrames = 0;
 
   function dkey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
   function loadLocal(){ try{ var s=localStorage.getItem('meditate_v2'); if(s) data=JSON.parse(s);}catch(e){} if(!data.days) data.days={}; data.today=data.days[dkey()]||0; }
@@ -266,9 +266,12 @@ nav .tab.on{background:var(--grad);color:#fff}
     faceOk=false; var closed=false;
     if(results.multiFaceLandmarks&&results.multiFaceLandmarks.length>0){
       faceOk=true; var lm=results.multiFaceLandmarks[0];
-      var ear=(eyeAspectRatio(lm,LEFT_EYE)+eyeAspectRatio(lm,RIGHT_EYE))/2;
-      if(ear<EAR_THRESH){ closedFrames++; openFrames=0; } else { openFrames++; closedFrames=0; }
-      if(closedFrames>=3) closed=true; if(openFrames>=3) closed=false; if(closedFrames<3&&openFrames<3) closed=eyesClosed;
+      var leftEAR=eyeAspectRatio(lm,LEFT_EYE);
+      var rightEAR=eyeAspectRatio(lm,RIGHT_EYE);
+      // ต้องหลับตาทั้งสองข้างถึงจะนับ
+      var bothClosed = (leftEAR < EAR_THRESH) && (rightEAR < EAR_THRESH);
+      if(bothClosed){ closedFrames++; openFrames=0; } else { openFrames++; closedFrames=0; }
+      if(closedFrames>=4) closed=true; if(openFrames>=2) closed=false; if(closedFrames<4&&openFrames<2) closed=eyesClosed;
       ctx.fillStyle=closed?'rgba(79,209,165,0.9)':'rgba(255,95,192,0.9)'; ctx.beginPath(); ctx.arc(canvas.width-30,30,12,0,Math.PI*2); ctx.fill();
     }
     eyesClosed=closed; updateSessionTick();
@@ -277,7 +280,7 @@ nav .tab.on{background:var(--grad);color:#fff}
     if(!running) return; var now=Date.now(), dt=now-lastTick; lastTick=now;
     if(faceOk&&eyesClosed){ closedMs+=dt; $('status').textContent='หลับตาแล้ว · กำลังนับเวลา'; $('status').className='status-pill run'; $('camMsg').style.display='none'; }
     else if(!faceOk){ $('status').textContent='ไม่เจอใบหน้า · วางกล้องให้เห็นหน้า'; $('status').className='status-pill warn'; $('camMsg').style.display=''; $('camMsg').innerHTML='ไม่เจอใบหน้า<br>เลื่อนมือถือให้เห็นหน้าชัด ๆ'; }
-    else { $('status').textContent='ลืมตาอยู่ · ยังไม่นับเวลา'; $('status').className='status-pill warn'; $('camMsg').style.display=''; $('camMsg').innerHTML='หลับตาเพื่อให้นับเวลา<br>ลืมตา = หยุดนับชั่วคราว'; }
+    else { $('status').textContent='ลืมตาอยู่ · ยังไม่นับเวลา'; $('status').className='status-pill warn'; $('camMsg').style.display=''; $('camMsg').innerHTML='หลับตาทั้งสองข้างเพื่อให้นับเวลา<br>ลืมตาข้างใดข้างหนึ่ง = หยุดนับ'; }
     $('timer').textContent=fmt(closedMs);
     var mins=Math.floor(closedMs/60000); if(mins>lastSavedMin){ var add=mins-lastSavedMin; lastSavedMin=mins; addMinutes(add); }
   }
