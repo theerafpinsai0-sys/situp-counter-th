@@ -188,7 +188,18 @@ nav .tab.on{background:var(--grad);color:#fff}
         await sb.from('profiles').upsert({id:authRes.data.user.id,email:email,username:uname,province:prov,region:PR[prov]||'',total_situps:0,updated_at:new Date().toISOString()});
         data.total=0; data.today=0; data.days={}; saveLocal(); amsg('สมัครสำเร็จ!');
       } else {
-        var loginRes=await sb.auth.signInWithPassword({email:email,password:pass}); if(loginRes.error) throw loginRes.error;
+        var look=await sb.from('profiles').select('email').ilike('username',uname).maybeSingle();
+        var tryEmails=[];
+        if(look.data&&look.data.email) tryEmails.push(look.data.email);
+        tryEmails.push(email);
+        tryEmails.push(uname.toLowerCase().replace(/[^a-z0-9]/g,'')+'@situp.app');
+        var loginRes=null, lastErr=null;
+        for(var i=0;i<tryEmails.length;i++){
+          loginRes=await sb.auth.signInWithPassword({email:tryEmails[i],password:pass});
+          if(!loginRes.error) break;
+          lastErr=loginRes.error;
+        }
+        if(!loginRes||loginRes.error) throw (lastErr||loginRes.error);
       }
       await refreshUser(); $('ap').value='';
     }catch(e){ var msg=e.message||'เกิดข้อผิดพลาด'; if(msg.indexOf('Invalid login')>=0) msg='ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'; if(msg.indexOf('already registered')>=0) msg='ชื่อผู้ใช้นี้มีคนใช้แล้ว'; amsg(msg); }
@@ -310,7 +321,6 @@ nav .tab.on{background:var(--grad);color:#fff}
   $('resetBtn').onclick=resetSession;
   function renderHome(){ $('today').textContent=Math.round(data.today||0); $('total').textContent=Math.round(data.total||0); }
 
-  // Avatar upload
   $('avBtn').onclick=function(){ $('avFile').click(); };
   $('avFile').onchange=async function(){
     var file=this.files&&this.files[0]; if(!file||!user) return;
