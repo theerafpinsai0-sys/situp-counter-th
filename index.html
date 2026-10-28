@@ -25,7 +25,7 @@ canvas#ov{position:absolute;inset:0;width:100%;height:100%;transform:scaleX(-1);
 .status-pill.idle{background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)}
 .status-pill.run{background:rgba(79,209,165,.2);color:var(--mint)}
 .status-pill.warn{background:rgba(255,95,192,.2);color:#FF5FC0}
-.hint{text-align:center;font-size:14px;opacity:.75;margin:10px 0 4px;line-height:1.5}
+.hint{display:none}
 .sub{display:grid;grid-template-columns:1fr 1fr;background:var(--panel);border-radius:22px;padding:14px 0;margin:16px 0 4px;text-align:center}
 .st b{display:block;font-size:28px;font-weight:800}.st span{font-size:13px;opacity:.65}.st+.st{border-left:1px solid var(--line)}
 .panel{background:var(--panel);border-radius:28px;padding:16px 8px 8px;box-shadow:var(--shadow)}
@@ -74,7 +74,7 @@ nav .tab.on{background:var(--grad);color:#fff}
   </div>
   <div class="timer" id="timer">00:00</div>
   <div class="status-pill idle" id="status">พร้อมเริ่ม</div>
-  <p class="hint" id="hint">นั่งหลังตรง วางกล้องให้เห็นใบหน้า<br>หลับตา → เวลานับ | ลืมตา → หยุดนับ</p>
+  <p class="hint" id="hint" hidden></p>
   <div class="sub">
     <div class="st"><b id="today">0</b><span>วันนี้ (นาที)</span></div>
     <div class="st"><b id="total">0</b><span>รวมทั้งหมด (นาที)</span></div>
@@ -291,7 +291,7 @@ nav .tab.on{background:var(--grad);color:#fff}
   function stopCamera(){ if(rafId){ cancelAnimationFrame(rafId); rafId=null; } if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream=null; } $('v').srcObject=null; var ctx=$('ov').getContext('2d'); ctx.clearRect(0,0,$('ov').width,$('ov').height); }
 
   async function startSession(){
-    if(!user||!profile){ $('hint').textContent='กรุณาเข้าสู่ระบบก่อนเริ่มนั่งสมาธิ'; go('Acc'); return; }
+    if(!user||!profile){ go('Acc'); return; }
     try{
       $('camMsg').style.display=''; $('camMsg').innerHTML='กำลังเปิดกล้อง...';
       running=true; closedMs=0; lastSavedMin=0; lastTick=Date.now(); eyesClosed=false; faceOk=false;
@@ -303,10 +303,9 @@ nav .tab.on{background:var(--grad);color:#fff}
     if(!running) return; running=false; stopCamera();
     $('startBtn').textContent='เริ่มนั่งสมาธิ'; $('status').textContent='หยุดแล้ว'; $('status').className='status-pill idle';
     $('camMsg').style.display=''; $('camMsg').innerHTML='กดปุ่มเริ่มด้านล่าง<br>แล้ววางมือถือให้เห็นใบหน้า<br>ระบบนับเวลาเฉพาะตอนหลับตา';
-    $('hint').innerHTML='ดีมาก! พักแล้วเริ่มรอบใหม่ได้เมื่อพร้อม';
     if(!skipSave){ var fullMins=Math.floor(closedMs/60000); var remainSec=Math.floor((closedMs%60000)/1000); var add=fullMins-lastSavedMin; if(remainSec>=10) add+=1; if(add>0) await addMinutes(add); }
   }
-  function resetSession(){ if(running) stopSession(true); closedMs=0; lastSavedMin=0; $('timer').textContent='00:00'; $('status').textContent='พร้อมเริ่ม'; $('status').className='status-pill idle'; $('hint').innerHTML='นั่งหลังตรง วางกล้องให้เห็นใบหน้า<br>หลับตา → เวลานับ | ลืมตา → หยุดนับ'; $('resetBtn').hidden=true; }
+  function resetSession(){ if(running) stopSession(true); closedMs=0; lastSavedMin=0; $('timer').textContent='00:00'; $('status').textContent='พร้อมเริ่ม'; $('status').className='status-pill idle'; $('resetBtn').hidden=true; }
   async function addMinutes(mins){
     if(!user||!profile||mins<=0) return;
     data.today=(data.today||0)+mins; data.total=(data.total||0)+mins; saveLocal(); renderHome();
