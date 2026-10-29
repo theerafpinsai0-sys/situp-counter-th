@@ -147,7 +147,8 @@ nav .tab.on{background:var(--grad);color:#fff}
       <input type="file" id="avFile" accept="image/*" hidden>
       <div style="font-size:12px;opacity:.6;margin:4px 0 8px">แตะรูปเพื่อเปลี่ยน</div>
       <div style="font-weight:800;font-size:22px" id="pfName"></div>
-      <div style="opacity:.7;margin-bottom:8px" id="pfEmail"></div>
+      <div style="opacity:.7;margin-bottom:6px" id="pfEmail"></div>
+      <div id="pfRank" style="display:none;margin:0 auto 12px;padding:8px 16px;border-radius:99px;background:linear-gradient(135deg,rgba(255,95,192,.2),rgba(139,79,255,.2));border:1px solid rgba(255,95,192,.35);font-weight:800;font-size:14px;letter-spacing:.3px;line-height:1.5"></div>
       <select id="pc"></select>
       <textarea id="bioInput" maxlength="120" placeholder="เรารัก ธีรยอด"></textarea>
       <button class="sm" id="bioSave" style="margin-top:8px">บันทึกคำแนะนำตัว</button>
@@ -250,7 +251,43 @@ nav .tab.on{background:var(--grad);color:#fff}
   function showProfile(r){ if(!r||!r.username) return; setAvatarEl($('pmAv'),r.avatar_url,(r.username||'?')[0].toUpperCase()); $('pmAv').classList.add('ring','lg'); $('pmName').textContent=r.username||'ไม่ระบุ'; $('pmMeta').textContent=(r.province||'')+(r.region?' · '+r.region:''); $('pmBio').textContent=(r.bio&&String(r.bio).trim())?String(r.bio).trim():DEFAULT_BIO; $('pmMins').textContent=Math.round(r.total_situps||0)+' นาที'; var m=$('profModal'); m.hidden=false; m.style.display='flex'; }
   if($('pmClose')) $('pmClose').onclick=function(e){ e.stopPropagation(); closeProfile(); };
   if($('profModal')) $('profModal').onclick=function(e){ if(e.target===$('profModal')) closeProfile(); };
-  function renderAcc(){ if(user&&profile){ $('authBox').hidden=true; $('profBox').hidden=false; $('pfName').textContent=profile.username||'ผู้ใช้'; $('pfEmail').textContent=(profile.province||'')+(profile.region?' · '+profile.region:''); setAvatarEl($('pfAv'),profile.avatar_url,(profile.username||'?')[0].toUpperCase()); $('pfAv').classList.add('ring','lg'); $('pc').value=profile.province||''; if($('bioInput')) $('bioInput').value=(profile.bio&&profile.bio.trim())?profile.bio:DEFAULT_BIO; } else { $('authBox').hidden=false; $('profBox').hidden=true; } }
+  async function loadUserRank(){
+    var el=$('pfRank');
+    if(!el) return;
+    if(!user||!profile){ el.style.display='none'; return; }
+    var mins=profile.total_situps||0;
+    if(mins<=0){ el.style.display='none'; return; }
+    try{
+      var q1=await sb.from('profiles').select('id',{count:'exact',head:true}).gt('total_situps',mins);
+      var rankTh=(q1.count||0)+1;
+      var parts=['Top '+rankTh+' ประเทศไทย'];
+      if(profile.region){
+        var q2=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('region',profile.region).gt('total_situps',mins);
+        parts.push('Top '+((q2.count||0)+1)+' '+profile.region);
+      }
+      if(profile.province){
+        var q3=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('province',profile.province).gt('total_situps',mins);
+        parts.push('Top '+((q3.count||0)+1)+' '+profile.province);
+      }
+      el.innerHTML=parts.join('<br>');
+      el.style.display='table';
+    }catch(e){ console.warn(e); el.style.display='none'; }
+  }
+  function renderAcc(){
+    if(user&&profile){
+      $('authBox').hidden=true; $('profBox').hidden=false;
+      $('pfName').textContent=profile.username||'ผู้ใช้';
+      $('pfEmail').textContent=(profile.province||'')+(profile.region?' · '+profile.region:'');
+      setAvatarEl($('pfAv'),profile.avatar_url,(profile.username||'?')[0].toUpperCase());
+      $('pfAv').classList.add('ring','lg');
+      $('pc').value=profile.province||'';
+      if($('bioInput')) $('bioInput').value=(profile.bio&&profile.bio.trim())?profile.bio:DEFAULT_BIO;
+      loadUserRank();
+    } else {
+      $('authBox').hidden=false; $('profBox').hidden=true;
+      if($('pfRank')) $('pfRank').style.display='none';
+    }
+  }
   if($('bioSave')){ $('bioSave').onclick=async function(){ if(!user||!profile) return; var b=($('bioInput').value||'').trim().slice(0,120)||DEFAULT_BIO; await sb.from('profiles').update({bio:b,updated_at:new Date().toISOString()}).eq('id',user.id); profile.bio=b; alert('บันทึกแล้ว'); }; }
   loadLocal(); renderHome();
   refreshUser().then(function(){ sb.auth.onAuthStateChange(function(){ refreshUser(); }); });
